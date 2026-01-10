@@ -15,8 +15,41 @@ df = df[df['Nama Sekolah'].notnull()]
 
 sql_statements = []
 
-# Basic schema setup
-sql_statements.append("-- Reset data if needed (optional)")
+# Schema Setup
+sql_statements.append("""-- Schema Setup
+CREATE TABLE IF NOT EXISTS organizations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS school_data (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    npsn TEXT UNIQUE NOT NULL,
+    stats JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE school_data ENABLE ROW LEVEL SECURITY;
+
+-- Public Read access
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public read for organizations') THEN
+        CREATE POLICY "Allow public read for organizations" ON organizations FOR SELECT USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public read for school_data') THEN
+        CREATE POLICY "Allow public read for school_data" ON school_data FOR SELECT USING (true);
+    END IF;
+END $$;
+""")
+
+# Basic data reset (optional)
+sql_statements.append("-- Reset data if needed")
 sql_statements.append("TRUNCATE organizations, school_data CASCADE;")
 sql_statements.append("")
 

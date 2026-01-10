@@ -1,4 +1,35 @@
--- Reset data if needed (optional)
+-- Schema Setup
+CREATE TABLE IF NOT EXISTS organizations (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    slug TEXT UNIQUE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS school_data (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    org_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    npsn TEXT UNIQUE NOT NULL,
+    stats JSONB NOT NULL DEFAULT '{}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE school_data ENABLE ROW LEVEL SECURITY;
+
+-- Public Read access
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public read for organizations') THEN
+        CREATE POLICY "Allow public read for organizations" ON organizations FOR SELECT USING (true);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'Allow public read for school_data') THEN
+        CREATE POLICY "Allow public read for school_data" ON school_data FOR SELECT USING (true);
+    END IF;
+END $$;
+
+-- Reset data if needed
 TRUNCATE organizations, school_data CASCADE;
 
 -- Insert organizations and school data
@@ -323,30 +354,6 @@ END $$;
 DO $$
 DECLARE org_smkn_cilebar UUID;
 BEGIN
-  INSERT INTO organizations (name, slug) VALUES ('SMKN  CILEBAR', 'smkn-cilebar') RETURNING id INTO org_smkn_cilebar;
+  INSERT INTO organizations (name, slug) VALUES ('SMKN CILEBAR', 'smkn-cilebar') RETURNING id INTO org_smkn_cilebar;
   INSERT INTO school_data (org_id, npsn, stats) VALUES (org_smkn_cilebar, '69734350', '{"siswa": 170, "guru": 13, "pegawai": 3, "rombel": 8, "jenis": "SMK", "status": "Negeri"}'::jsonb);
-END $$;
-DO $$
-DECLARE org_pkbm_ciptamekar UUID;
-BEGIN
-  INSERT INTO organizations (name, slug) VALUES ('PKBM CIPTAMEKAR', 'pkbm-ciptamekar') RETURNING id INTO org_pkbm_ciptamekar;
-  INSERT INTO school_data (org_id, npsn, stats) VALUES (org_pkbm_ciptamekar, 'P2965781', '{"siswa": 265, "guru": 5, "pegawai": 1, "rombel": 12, "jenis": "PKBM", "status": "Swasta"}'::jsonb);
-END $$;
-DO $$
-DECLARE org_pkbm_qorro_abadan_babussalam UUID;
-BEGIN
-  INSERT INTO organizations (name, slug) VALUES ('PKBM QORRO ABADAN BABUSSALAM', 'pkbm-qorro-abadan-babussalam') RETURNING id INTO org_pkbm_qorro_abadan_babussalam;
-  INSERT INTO school_data (org_id, npsn, stats) VALUES (org_pkbm_qorro_abadan_babussalam, 'P2970415', '{"siswa": 46, "guru": 8, "pegawai": 1, "rombel": 2, "jenis": "PKBM", "status": "Swasta"}'::jsonb);
-END $$;
-DO $$
-DECLARE org_pkbm_ratu_kencana UUID;
-BEGIN
-  INSERT INTO organizations (name, slug) VALUES ('PKBM RATU KENCANA', 'pkbm-ratu-kencana') RETURNING id INTO org_pkbm_ratu_kencana;
-  INSERT INTO school_data (org_id, npsn, stats) VALUES (org_pkbm_ratu_kencana, 'P2965784', '{"siswa": 444, "guru": 12, "pegawai": 3, "rombel": 13, "jenis": "PKBM", "status": "Swasta"}'::jsonb);
-END $$;
-DO $$
-DECLARE org_total UUID;
-BEGIN
-  INSERT INTO organizations (name, slug) VALUES ('Total', 'total') RETURNING id INTO org_total;
-  INSERT INTO school_data (org_id, npsn, stats) VALUES (org_total, 'Total', '{"siswa": 7370, "guru": 330, "pegawai": 98, "rombel": 325, "jenis": "Total", "status": "Total"}'::jsonb);
 END $$;
