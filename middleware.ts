@@ -22,7 +22,9 @@ export default async function middleware(req: NextRequest) {
     'localhost:3000', 
     'datadikcilebar.my.id', 
     'www.datadikcilebar.my.id',
-    'datadik-cilebar.vercel.app'
+    'datadik-cilebar.vercel.app',
+    'kemendikdasmen.go.id',
+    'www.kemendikdasmen.go.id'
   ];
   
   // Extract subdomain
