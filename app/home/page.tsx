@@ -122,7 +122,7 @@ export default function HomePage() {
       <main className="grow pt-16">
         {/* Hero Section */}
         <section className="relative py-24 md:py-32 overflow-hidden bg-white border-b">
-          <div className="absolute inset-0 bg-grid-slate-200 mask-[linear-gradient(0deg,white,transparent)]" />
+          <div className="absolute inset-0 bg-grid-slate-200 mask-[linear-gradient(180deg,white,transparent)]" />
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.05),transparent_70%)]" />
           
           <div className="container mx-auto px-4 relative z-10 text-center">
