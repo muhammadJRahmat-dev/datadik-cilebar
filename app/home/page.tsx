@@ -285,7 +285,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-xl overflow-hidden border shadow-2xl relative">
+          <div className="rounded-3xl overflow-hidden border-none shadow-2xl relative min-h-[500px] bg-slate-100">
             <CilebarMap schools={filteredSchools} />
             {filteredSchools.length === 0 && !loading && (
               <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-[1000]">
@@ -312,9 +312,10 @@ export default function HomePage() {
             )}
           </div>
         </section>
-      </main>
+      </div>
+    </main>
 
-      <Footer />
-    </div>
-  );
+    <Footer />
+  </div>
+);
 }
