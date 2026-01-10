@@ -93,14 +93,14 @@ export default function SchoolPage() {
       {/* School Header */}
       <header className="bg-slate-900 text-white pt-32 pb-16 shadow-2xl relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-t from-slate-900 via-transparent to-transparent" />
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
             <div className="w-40 h-40 bg-white rounded-3xl flex items-center justify-center shadow-[0_0_50px_rgba(0,0,0,0.3)] border-4 border-white/20 overflow-hidden transform hover:scale-105 transition-transform duration-500">
               <School className="h-20 w-20 text-slate-900" />
             </div>
-            <div className="text-center md:text-left flex-grow">
+            <div className="text-center md:text-left grow">
               <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
                 <span className="px-3 py-1 rounded-full bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em]">
                   {stats.jenis || 'SEKOLAH'}
@@ -133,7 +133,7 @@ export default function SchoolPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-12 flex-grow">
+      <main className="container mx-auto px-4 py-12 grow">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-12">

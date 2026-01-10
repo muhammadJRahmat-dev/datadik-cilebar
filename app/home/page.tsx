@@ -119,10 +119,10 @@ export default function HomePage() {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
-      <main className="flex-grow pt-16">
+      <main className="grow pt-16">
         {/* Hero Section */}
         <section className="relative py-24 md:py-32 overflow-hidden bg-white border-b">
-          <div className="absolute inset-0 bg-grid-slate-200 [mask-image:linear-gradient(0deg,white,transparent)]" />
+          <div className="absolute inset-0 bg-grid-slate-200 mask-[linear-gradient(0deg,white,transparent)]" />
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.05),transparent_70%)]" />
           
           <div className="container mx-auto px-4 relative z-10 text-center">
@@ -135,7 +135,7 @@ export default function HomePage() {
             </div>
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter mb-8 text-slate-900 leading-[0.9] uppercase">
               Smart Data <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-blue-600 to-indigo-600">
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-primary via-blue-600 to-indigo-600">
                 Pendidikan
               </span>
             </h1>
@@ -288,7 +288,7 @@ export default function HomePage() {
           <div className="rounded-3xl overflow-hidden border-none shadow-2xl relative min-h-[500px] bg-slate-100">
             <CilebarMap schools={filteredSchools} />
             {filteredSchools.length === 0 && !loading && (
-              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-[1000]">
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-1000">
                 <div className="text-center p-8 bg-white rounded-2xl shadow-xl border">
                   <School className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
                   <p className="font-bold text-xl">Sekolah Tidak Ditemukan</p>
