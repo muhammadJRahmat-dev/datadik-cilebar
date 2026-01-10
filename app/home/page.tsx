@@ -1,9 +1,11 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LayoutGrid, Map as MapIcon, School, Users } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 // Dynamic import for the map to avoid SSR issues with Leaflet
 const CilebarMap = dynamic(() => import('@/components/map/CilebarMap'), { 
@@ -11,14 +13,65 @@ const CilebarMap = dynamic(() => import('@/components/map/CilebarMap'), {
   loading: () => <div className="h-[500px] w-full bg-muted animate-pulse rounded-xl flex items-center justify-center">Memuat Peta...</div>
 });
 
-// Dummy data for schools
-const dummySchools = [
-  { id: '1', name: 'SDN Cilebar 1', lat: -6.2146, lng: 107.3000, slug: 'sdn-cilebar-1' },
-  { id: '2', name: 'SDN Cilebar 2', lat: -6.2200, lng: 107.3100, slug: 'sdn-cilebar-2' },
-  { id: '3', name: 'SMPN 1 Cilebar', lat: -6.2100, lng: 107.2900, slug: 'smpn-1-cilebar' },
-];
-
 export default function HomePage() {
+  const [schools, setSchools] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    totalSchools: 0,
+    totalSiswa: 0,
+    totalGuru: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const { data: orgs, error } = await supabase
+          .from('organizations')
+          .select(`
+            id,
+            name,
+            slug,
+            school_data (
+              npsn,
+              stats
+            )
+          `);
+
+        if (error) throw error;
+
+        if (orgs) {
+          const formattedSchools = orgs.map(org => ({
+            id: org.id,
+            name: org.name,
+            slug: org.slug,
+            // Default coordinates if not provided in DB yet
+            lat: -6.2146 + (Math.random() - 0.5) * 0.05, 
+            lng: 107.3000 + (Math.random() - 0.5) * 0.05,
+            npsn: org.school_data?.[0]?.npsn,
+            ...org.school_data?.[0]?.stats
+          }));
+
+          setSchools(formattedSchools);
+
+          // Calculate aggregate stats
+          const totals = formattedSchools.reduce((acc, curr) => ({
+            totalSchools: acc.totalSchools + 1,
+            totalSiswa: acc.totalSiswa + (curr.siswa || 0),
+            totalGuru: acc.totalGuru + (curr.guru || 0),
+          }), { totalSchools: 0, totalSiswa: 0, totalGuru: 0 });
+
+          setStats(totals);
+        }
+      } catch (err) {
+        console.error('Error fetching schools:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -26,7 +79,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <School className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl tracking-tight">DATADIK CILEBAR</span>
+            <span className="font-bold text-xl tracking-tight uppercase">Datadik Cilebar</span>
           </div>
           <nav className="hidden md:flex items-center gap-6">
             <a href="#" className="text-sm font-medium hover:text-primary transition-colors">Beranda</a>
@@ -47,41 +100,45 @@ export default function HomePage() {
             Pusat data informasi pendidikan terpadu untuk monitoring, pemetaan, dan publikasi sekolah di wilayah Cilebar.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
-            <Button size="lg" className="rounded-full">Jelajahi Sekolah</Button>
-            <Button size="lg" variant="outline" className="rounded-full">Data Statistik</Button>
+            <Button size="lg" className="rounded-full" asChild>
+              <a href="#peta">Jelajahi Sekolah</a>
+            </Button>
+            <Button size="lg" variant="outline" className="rounded-full" asChild>
+              <a href="#statistik">Data Statistik</a>
+            </Button>
           </div>
         </section>
 
         {/* Stats Grid */}
         <section id="statistik" className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
-          <Card>
+          <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-primary/10 to-background">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Sekolah</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground uppercase">Total Sekolah</CardTitle>
               <School className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">24</div>
-              <p className="text-xs text-muted-foreground">SD, SMP, dan SMA</p>
+              <div className="text-4xl font-bold">{loading ? '...' : stats.totalSchools}</div>
+              <p className="text-xs text-muted-foreground mt-1">Sekolah Terdaftar</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-primary/10 to-background">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Siswa</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground uppercase">Total Siswa</CardTitle>
               <Users className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">4,281</div>
-              <p className="text-xs text-muted-foreground">Tahun Ajaran 2025/2026</p>
+              <div className="text-4xl font-bold">{loading ? '...' : stats.totalSiswa.toLocaleString('id-ID')}</div>
+              <p className="text-xs text-muted-foreground mt-1">Peserta Didik Aktif</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="overflow-hidden border-none shadow-lg bg-gradient-to-br from-primary/10 to-background">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Guru</CardTitle>
+              <CardTitle className="text-sm font-medium text-muted-foreground uppercase">Total Guru</CardTitle>
               <LayoutGrid className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">186</div>
-              <p className="text-xs text-muted-foreground">PNS & Honorer</p>
+              <div className="text-4xl font-bold">{loading ? '...' : stats.totalGuru.toLocaleString('id-ID')}</div>
+              <p className="text-xs text-muted-foreground mt-1">Pendidik & Tenaga Kependidikan</p>
             </CardContent>
           </Card>
         </section>
@@ -92,13 +149,21 @@ export default function HomePage() {
             <MapIcon className="h-6 w-6 text-primary" />
             <h2 className="text-3xl font-bold tracking-tight">Peta Sebaran Sekolah</h2>
           </div>
-          <CilebarMap schools={dummySchools} />
+          <div className="rounded-xl overflow-hidden border shadow-2xl">
+            <CilebarMap schools={schools} />
+          </div>
         </section>
       </main>
 
       <footer className="border-t py-12 bg-muted/30">
         <div className="container mx-auto px-4 text-center">
-          <p className="text-muted-foreground">© 2026 Datadik Cilebar. All rights reserved.</p>
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <School className="h-5 w-5 text-muted-foreground" />
+            <span className="font-semibold text-muted-foreground uppercase">Datadik Cilebar</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            © {new Date().getFullYear()} Datadik Cilebar. Sistem Informasi Data Pendidikan Terpadu.
+          </p>
         </div>
       </footer>
     </div>
