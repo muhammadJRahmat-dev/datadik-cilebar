@@ -18,7 +18,12 @@ export default async function middleware(req: NextRequest) {
   const hostname = req.headers.get('host') || 'datadikcilebar.my.id';
 
   // Define allowed domains (localhost and production domain)
-  const rootDomains = ['localhost:3000', 'datadikcilebar.my.id', 'www.datadikcilebar.my.id'];
+  const rootDomains = [
+    'localhost:3000', 
+    'datadikcilebar.my.id', 
+    'www.datadikcilebar.my.id',
+    'datadik-cilebar.vercel.app'
+  ];
   
   // Extract subdomain
   const searchParams = url.searchParams.toString();
