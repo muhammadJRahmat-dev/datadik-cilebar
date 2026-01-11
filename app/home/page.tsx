@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { LayoutGrid, Map as MapIcon, School, Users, Search, Filter } from 'lucide-react';
+import { LayoutGrid, Map as MapIcon, School, Users, Search, Filter, BookOpen, Calendar, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 // Dynamic import for the map to avoid SSR issues with Leaflet
@@ -19,6 +20,8 @@ const CilebarMap = dynamic(() => import('@/components/map/CilebarMap'), {
 export default function HomePage() {
   const [schools, setSchools] = useState<any[]>([]);
   const [filteredSchools, setFilteredSchools] = useState<any[]>([]);
+  const [latestPosts, setLatestPosts] = useState<any[]>([]);
+  const [activeCategory, setActiveCategory] = useState('semua');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('Semua');
   const [stats, setStats] = useState({
@@ -34,7 +37,8 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const { data: orgs, error } = await supabase
+        // 1. Fetch Schools
+        const { data: orgs, error: orgError } = await supabase
           .from('organizations')
           .select(`
             id,
@@ -46,25 +50,29 @@ export default function HomePage() {
             )
           `);
 
-        if (error) throw error;
+        if (orgError) throw orgError;
 
         if (orgs) {
-          const formattedSchools = orgs.map(org => ({
-            id: org.id,
-            name: org.name,
-            slug: org.slug,
-            lat: -6.2146 + (Math.random() - 0.5) * 0.05, 
-            lng: 107.3000 + (Math.random() - 0.5) * 0.05,
-            npsn: org.school_data?.[0]?.npsn,
-            ...org.school_data?.[0]?.stats
-          }));
+          const formattedSchools = orgs.map(org => {
+            const schoolData = org.school_data?.[0] || {};
+            const stats = schoolData.stats || {};
+            
+            return {
+              id: org.id,
+              name: org.name,
+              slug: org.slug,
+              lat: stats.lat || (-6.2146 + (Math.random() - 0.5) * 0.05),
+              lng: stats.lng || (107.3000 + (Math.random() - 0.5) * 0.05),
+              npsn: schoolData.npsn,
+              ...stats
+            };
+          });
 
           setSchools(formattedSchools);
           setFilteredSchools(formattedSchools);
 
           // Calculate aggregate stats
           const typeMap = new Map<string, { count: number, siswa: number }>();
-          
           const totals = formattedSchools.reduce((acc, curr) => {
             const type = curr.jenis || 'Lainnya';
             const currentTypeData = typeMap.get(type) || { count: 0, siswa: 0 };
@@ -88,8 +96,28 @@ export default function HomePage() {
 
           setStats({ ...totals, byType });
         }
+
+        // 2. Fetch Latest Posts
+        const { data: posts, error: postError } = await supabase
+          .from('posts')
+          .select(`
+            id,
+            title,
+            category,
+            created_at,
+            organizations (
+              name,
+              slug
+            )
+          `)
+          .eq('is_published', true)
+          .order('created_at', { ascending: false })
+          .limit(6);
+
+        if (!postError) setLatestPosts(posts || []);
+
       } catch (err) {
-        console.error('Error fetching schools:', err);
+        console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
       }
@@ -114,6 +142,10 @@ export default function HomePage() {
     
     setFilteredSchools(result);
   }, [searchQuery, selectedType, schools]);
+
+  const filteredPosts = activeCategory === 'semua' 
+    ? latestPosts 
+    : latestPosts.filter(p => p.category === activeCategory);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -310,6 +342,119 @@ export default function HomePage() {
             {selectedType !== 'Semua' && (
               <p>Filter: <span className="text-primary font-bold">{selectedType}</span></p>
             )}
+          </div>
+        </section>
+
+        {/* Latest News Aggregator */}
+        <section id="berita" className="mb-24">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-primary/10 rounded-2xl text-primary">
+                <BookOpen className="h-6 w-6" />
+              </div>
+              <div>
+                <h2 className="text-3xl font-black tracking-tight uppercase leading-none">Berita Terkini</h2>
+                <p className="text-sm text-slate-500 font-medium mt-1">Update terbaru dari seluruh sekolah di Cilebar</p>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 rounded-[1.5rem] w-fit">
+              {['semua', 'berita', 'pengumuman', 'agenda'].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
+                    activeCategory === cat 
+                      ? 'bg-white text-primary shadow-xl shadow-slate-200/50' 
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <AnimatePresence mode="popLayout">
+              {filteredPosts.length > 0 ? filteredPosts.map((post) => (
+                <motion.div
+                  layout
+                  key={post.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <Card className="group border-none shadow-xl hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] overflow-hidden bg-white flex flex-col h-full">
+                    <CardHeader className="p-8 pb-0">
+                      <div className="flex justify-between items-start mb-4">
+                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${
+                          post.category === 'pengumuman' ? 'bg-amber-100 text-amber-600' : 
+                          post.category === 'agenda' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
+                        }`}>
+                          {post.category}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-2">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(post.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
+                        </span>
+                      </div>
+                      <h3 className="text-xl font-black group-hover:text-primary transition-colors line-clamp-2 leading-tight tracking-tight mb-2">
+                        {post.title}
+                      </h3>
+                    </CardHeader>
+                    <CardContent className="p-8 pt-4 grow flex flex-col justify-between">
+                      <div>
+                        <p className="text-slate-500 text-sm leading-relaxed line-clamp-3 mb-6 font-medium">
+                          {post.content.replace(/<[^>]*>/g, '').substring(0, 120)}...
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-3 mb-6 p-3 bg-slate-50 rounded-2xl group-hover:bg-primary/5 transition-colors">
+                        <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center shadow-sm border border-slate-100">
+                          <School className="h-4 w-4 text-slate-400" />
+                        </div>
+                        <span className="text-xs font-bold text-slate-600 truncate uppercase tracking-tighter">
+                          {post.organizations?.name}
+                        </span>
+                      </div>
+
+                      <Button variant="ghost" className="w-full justify-between font-black uppercase tracking-widest text-[10px] group/btn hover:bg-primary hover:text-white rounded-xl py-6 transition-all duration-300" asChild>
+                        <a 
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const slug = post.organizations?.slug;
+                            if (!slug) return;
+                            const host = window.location.host;
+                            const url = host.includes('localhost') 
+                              ? `http://${slug}.localhost:3000` 
+                              : `https://${slug}.datadikcilebar.my.id`;
+                            window.open(url, '_blank');
+                          }}
+                        >
+                          Baca Selengkapnya
+                          <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
+                        </a>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )) : (
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="col-span-full py-24 text-center bg-white rounded-[3rem] shadow-xl shadow-slate-100/50 border-2 border-dashed border-slate-100"
+                >
+                  <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
+                    <BookOpen className="h-8 w-8 text-slate-200" />
+                  </div>
+                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Belum ada konten</h3>
+                  <p className="text-slate-500 max-w-xs mx-auto text-sm font-medium mt-2">Tidak ada {activeCategory === 'semua' ? 'konten' : activeCategory} yang ditemukan untuk saat ini.</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </section>
       </div>

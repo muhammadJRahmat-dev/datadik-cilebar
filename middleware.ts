@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
 
 export const config = {
   matcher: [
@@ -13,11 +14,62 @@ export const config = {
   ],
 };
 
-export default async function middleware(req: NextRequest) {
-  const url = req.nextUrl;
-  const hostname = req.headers.get('host') || 'datadikcilebar.my.id';
+export default async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
 
-  // Define allowed domains (localhost and production domain)
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value;
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({ name, value, ...options });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          response.cookies.set({ name, value, ...options });
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({ name, value: '', ...options });
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          });
+          response.cookies.set({ name, value: '', ...options });
+        },
+      },
+    }
+  );
+
+  const { data: { session } } = await supabase.auth.getSession();
+
+  const url = request.nextUrl;
+  const hostname = request.headers.get('host') || 'datadikcilebar.my.id';
+  const path = url.pathname;
+
+  // 1. Protection for /dashboard
+  if (path.startsWith('/dashboard')) {
+    if (!session) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+  }
+
+  // 2. Redirect logged-in users away from /login
+  if (path === '/login' && session) {
+    return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // 3. Subdomain Routing Logic
   const rootDomains = [
     'localhost:3000', 
     'datadikcilebar.my.id', 
@@ -26,21 +78,27 @@ export default async function middleware(req: NextRequest) {
     'kemendikdasmen.go.id',
     'www.kemendikdasmen.go.id'
   ];
-  
-  // Extract subdomain
-  const searchParams = url.searchParams.toString();
-  const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ''}`;
 
-  // If it's a root domain, rewrite to /home
+  const searchParams = url.searchParams.toString();
+  const fullPath = `${path}${searchParams.length > 0 ? `?${searchParams}` : ''}`;
+
+  // If it's a root domain
   if (rootDomains.includes(hostname)) {
-    return NextResponse.rewrite(new URL(`/home${path}`, req.url));
+    // If it's the root path, rewrite to /home
+    if (path === '/') {
+      return NextResponse.rewrite(new URL(`/home`, request.url));
+    }
+    // Otherwise just continue (for /login, /dashboard, etc.)
+    return response;
   }
 
   // If it's a subdomain, rewrite to /sites/[subdomain]
   const subdomain = hostname.split('.')[0];
   if (subdomain && !rootDomains.includes(hostname)) {
-    return NextResponse.rewrite(new URL(`/sites/${subdomain}${path}`, req.url));
+    // Prevent subdomains from accessing /dashboard or /login directly if needed, 
+    // but usually they just see the school site.
+    return NextResponse.rewrite(new URL(`/sites/${subdomain}${fullPath}`, request.url));
   }
 
-  return NextResponse.next();
+  return response;
 }

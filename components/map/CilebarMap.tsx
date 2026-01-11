@@ -1,7 +1,21 @@
 'use client';
 
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { MapContainer, TileLayer, Marker as LeafletMarker, Popup as LeafletPopup } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+
+// Fix Leaflet marker icons
+if (typeof window !== 'undefined') {
+  // @ts-ignore
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  });
+}
 
 interface SchoolMarker {
   id: string;
@@ -71,15 +85,69 @@ const mapOptions = {
 
 export default function CilebarMap({ schools }: { schools: SchoolMarker[] }) {
   const [selectedSchool, setSelectedSchool] = useState<SchoolMarker | null>(null);
+  const [mapError, setMapError] = useState(false);
 
-  const { isLoaded } = useJsApiLoader({
+  const { isLoaded, loadError } = useJsApiLoader({
     id: 'google-map-script',
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
   });
 
+  useEffect(() => {
+    if (loadError) {
+      console.error('Google Maps Load Error:', loadError);
+      setMapError(true);
+    }
+  }, [loadError]);
+
   const onSelect = useCallback((school: SchoolMarker) => {
     setSelectedSchool(school);
   }, []);
+
+  if (mapError || !process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+    return (
+      <div className="h-[500px] w-full rounded-xl overflow-hidden border shadow-md relative">
+        <MapContainer 
+          center={[defaultCenter.lat, defaultCenter.lng]} 
+          zoom={13} 
+          style={{ height: '100%', width: '100%' }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {schools.map((school) => (
+            <LeafletMarker 
+              key={school.id} 
+              position={[school.lat, school.lng]}
+              eventHandlers={{
+                click: () => onSelect(school),
+              }}
+            >
+              <LeafletPopup>
+                <div className="p-1 min-w-[150px]">
+                  <h3 className="font-bold text-slate-900 mb-1 text-xs">{school.name}</h3>
+                  <div className="text-[10px] text-slate-500 mb-2">
+                    NPSN: {school.npsn || '-'}
+                  </div>
+                  <a 
+                    href={typeof window !== 'undefined' 
+                      ? `${window.location.protocol}//${school.slug}.${window.location.host.replace('www.', '').replace('localhost:3000', 'datadikcilebar.my.id')}`
+                      : '#'}
+                    className="inline-flex items-center justify-center w-full px-2 py-1 text-[10px] font-semibold text-white bg-blue-600 rounded hover:bg-blue-700 transition-all"
+                  >
+                    Buka Portal
+                  </a>
+                </div>
+              </LeafletPopup>
+            </LeafletMarker>
+          ))}
+        </MapContainer>
+        <div className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm px-2 py-1 rounded text-[10px] text-slate-600 z-[1000] border shadow-sm">
+          Fallback Mode: OpenStreetMap
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoaded) return <div className="h-[500px] w-full rounded-xl flex items-center justify-center bg-slate-100 animate-pulse text-slate-400">Loading Map...</div>;
 
@@ -90,6 +158,7 @@ export default function CilebarMap({ schools }: { schools: SchoolMarker[] }) {
         center={defaultCenter}
         zoom={13}
         options={mapOptions}
+        onLoad={() => console.log('Google Maps Loaded Successfully')}
       >
         {schools.map((school) => (
           <Marker

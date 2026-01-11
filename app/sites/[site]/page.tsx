@@ -19,36 +19,53 @@ export default function SchoolPage() {
   const params = useParams();
   const site = params.site as string;
   const [school, setSchool] = useState<any>(null);
+  const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchSchool() {
+    async function fetchData() {
       try {
-        const { data, error } = await supabase
+        // 1. Fetch School Data
+        const { data: org, error: orgError } = await supabase
           .from('organizations')
           .select(`
             id,
             name,
             slug,
+            type,
+            logo_url,
+            address,
+            theme_color,
             school_data (
               npsn,
-              address,
               stats
             )
           `)
           .eq('slug', site)
           .single();
 
-        if (error) throw error;
-        setSchool(data);
+        if (orgError) throw orgError;
+        setSchool(org);
+
+        // 2. Fetch School Posts
+        const { data: schoolPosts, error: postsError } = await supabase
+          .from('posts')
+          .select('*')
+          .eq('org_id', org.id)
+          .eq('is_published', true)
+          .order('created_at', { ascending: false })
+          .limit(6);
+
+        if (!postsError) setPosts(schoolPosts || []);
+
       } catch (err) {
-        console.error('Error fetching school:', err);
+        console.error('Error fetching data:', err);
       } finally {
         setLoading(false);
       }
     }
 
-    if (site) fetchSchool();
+    if (site) fetchData();
   }, [site]);
 
   if (loading) {
@@ -79,15 +96,19 @@ export default function SchoolPage() {
 
   const data = school.school_data?.[0] || {};
   const stats = data.stats || {};
+  const schoolAddress = school.address || stats.address || 'Kecamatan Cilebar, Karawang, Jawa Barat';
+  const schoolEmail = stats.kontak_email || 'info@cilebar.datadik.id';
+  const schoolWA = stats.kontak_wa || '';
+  const themeColor = school.theme_color || '#2563eb';
 
-  const news = [
-    { id: 1, title: 'Penerimaan Peserta Didik Baru 2026', date: '10 Jan 2026', category: 'Pengumuman' },
-    { id: 2, title: 'Rapat Orang Tua Murid Semester Genap', date: '08 Jan 2026', category: 'Agenda' },
-    { id: 3, title: 'Juara 1 Lomba Cerdas Cermat Tingkat Kecamatan', date: '05 Jan 2026', category: 'Berita' },
-  ];
+  // Filter out known keys to get dynamic info
+  const KNOWN_KEYS = ['siswa', 'guru', 'pegawai', 'rombel', 'jenis', 'status', 'visi', 'misi', 'kontak_wa', 'kontak_email', 'last_sync', 'lat', 'lng', 'address'];
+  const dynamicInfo = Object.entries(stats)
+    .filter(([key]) => !KNOWN_KEYS.includes(key))
+    .map(([key, value]) => ({ label: key, value: String(value) }));
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
+    <div className="min-h-screen bg-slate-50 flex flex-col" style={{ '--primary': themeColor } as any}>
       <Navbar />
 
       {/* School Header */}
@@ -98,12 +119,16 @@ export default function SchoolPage() {
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
             <div className="w-40 h-40 bg-white rounded-3xl flex items-center justify-center shadow-[0_0_50px_rgba(0,0,0,0.3)] border-4 border-white/20 overflow-hidden transform hover:scale-105 transition-transform duration-500">
-              <School className="h-20 w-20 text-slate-900" />
+              {school.logo_url ? (
+                <img src={school.logo_url} alt={school.name} className="w-full h-full object-contain p-4" />
+              ) : (
+                <School className="h-20 w-20 text-slate-900" />
+              )}
             </div>
             <div className="text-center md:text-left grow">
               <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
-                <span className="px-3 py-1 rounded-full bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em]">
-                  {stats.jenis || 'SEKOLAH'}
+                <span className="px-3 py-1 rounded-full bg-[var(--primary)] text-white text-[10px] font-black uppercase tracking-[0.2em]">
+                  {school.type || stats.jenis || 'SEKOLAH'}
                 </span>
                 <span className="px-3 py-1 rounded-full bg-green-500 text-white text-[10px] font-black uppercase tracking-[0.2em]">
                   {stats.status || 'AKTIF'}
@@ -114,19 +139,21 @@ export default function SchoolPage() {
               </h1>
               <div className="flex flex-wrap justify-center md:justify-start gap-6 text-slate-400 font-medium">
                 <span className="flex items-center gap-2 hover:text-white transition-colors cursor-default">
-                  <MapPin className="h-4 w-4 text-primary" /> {data.address || 'Kecamatan Cilebar, Karawang'}
+                  <MapPin className="h-4 w-4 text-[var(--primary)]" /> {schoolAddress}
                 </span>
                 <span className="flex items-center gap-2 hover:text-white transition-colors cursor-default">
-                  <ShieldCheck className="h-4 w-4 text-primary" /> NPSN: {data.npsn || '-'}
+                  <ShieldCheck className="h-4 w-4 text-[var(--primary)]" /> NPSN: {data.npsn || '-'}
                 </span>
                 <span className="flex items-center gap-2 hover:text-white transition-colors cursor-default">
-                  <Globe className="h-4 w-4 text-primary" /> cilebar.datadik.id
+                  <Globe className="h-4 w-4 text-[var(--primary)]" /> {school.slug}.datadikcilebar.my.id
                 </span>
               </div>
             </div>
             <div className="hidden lg:block">
-              <Button size="lg" className="rounded-2xl font-bold px-8 py-8 h-auto shadow-xl shadow-primary/20">
-                HUBUNGI SEKOLAH
+              <Button size="lg" className="rounded-2xl font-bold px-8 py-8 h-auto shadow-xl shadow-primary/20 bg-[var(--primary)] hover:opacity-90 transition-opacity" asChild>
+                <a href={schoolWA ? `https://wa.me/${schoolWA.replace(/\D/g, '')}` : '#'} target="_blank">
+                  HUBUNGI SEKOLAH
+                </a>
               </Button>
             </div>
           </div>
@@ -144,9 +171,9 @@ export default function SchoolPage() {
                   <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl w-fit mb-6 group-hover:scale-110 transition-transform">
                     <Award className="h-6 w-6" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">Visi & Misi</h3>
+                  <h3 className="text-xl font-bold mb-3">Visi</h3>
                   <p className="text-slate-600 text-sm leading-relaxed italic">
-                    "Terwujudnya insan yang cerdas, kompetitif, dan berakhlak mulia melalui layanan pendidikan yang berkualitas dan inklusif di wilayah Cilebar."
+                    {stats.visi ? `"${stats.visi}"` : "Visi sekolah belum diatur oleh operator."}
                   </p>
                 </CardContent>
               </Card>
@@ -155,9 +182,9 @@ export default function SchoolPage() {
                   <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl w-fit mb-6 group-hover:scale-110 transition-transform">
                     <BookOpen className="h-6 w-6" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">Kurikulum</h3>
+                  <h3 className="text-xl font-bold mb-3">Misi</h3>
                   <p className="text-slate-600 text-sm leading-relaxed">
-                    Menggunakan Kurikulum Merdeka yang disesuaikan dengan kearifan lokal untuk mencetak generasi yang inovatif dan siap menghadapi tantangan zaman.
+                    {stats.misi || "Misi sekolah belum diatur oleh operator."}
                   </p>
                 </CardContent>
               </Card>
@@ -165,7 +192,7 @@ export default function SchoolPage() {
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <MapPin className="h-6 w-6 text-primary" /> Lokasi Sekolah
+                  <MapPin className="h-6 w-6 text-[var(--primary)]" /> Lokasi Sekolah
                 </h2>
               </div>
               <Card className="border-none shadow-xl rounded-3xl overflow-hidden">
@@ -173,37 +200,51 @@ export default function SchoolPage() {
                   <CilebarMap schools={[{
                     id: school.id,
                     name: school.name,
-                    lat: -6.2146, // Default Cilebar center for now
-                    lng: 107.3000,
+                    lat: stats.lat || -6.2146,
+                    lng: stats.lng || 107.3000,
                     slug: school.slug,
                     npsn: data.npsn
                   }]} />
                 </CardContent>
               </Card>
               <p className="mt-4 text-sm text-slate-500 flex items-center gap-2 px-2">
-                <MapPin className="h-4 w-4" /> {data.address || 'Kecamatan Cilebar, Karawang, Jawa Barat'}
+                <MapPin className="h-4 w-4" /> {schoolAddress}
               </p>
             </section>
 
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <BookOpen className="h-6 w-6 text-primary" /> Berita & Pengumuman
+                  <BookOpen className="h-6 w-6 text-[var(--primary)]" /> Berita & Pengumuman
                 </h2>
-                <Button variant="ghost" className="text-primary font-bold">Lihat Semua</Button>
+                <Button variant="ghost" className="text-[var(--primary)] font-bold">Lihat Semua</Button>
               </div>
               <div className="grid gap-4">
-                {news.map((item) => (
+                {posts.length > 0 ? posts.map((item) => (
                   <Card key={item.id} className="group hover:shadow-xl transition-all duration-300 border-none shadow-md cursor-pointer overflow-hidden rounded-2xl bg-white">
                     <CardContent className="p-6">
                       <div className="flex justify-between items-start mb-3">
-                        <span className="text-[10px] font-black uppercase tracking-widest px-2 py-1 bg-primary/10 text-primary rounded-lg">{item.category}</span>
-                        <span className="text-xs text-slate-400 flex items-center gap-1 font-bold uppercase tracking-tighter"><Calendar className="h-3 w-3" /> {item.date}</span>
+                        <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${
+                          item.category === 'pengumuman' ? 'bg-amber-100 text-amber-600' : 
+                          item.category === 'agenda' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
+                        }`}>
+                          {item.category}
+                        </span>
+                        <span className="text-xs text-slate-400 flex items-center gap-1 font-bold uppercase tracking-tighter">
+                          <Calendar className="h-3 w-3" /> 
+                          {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </span>
                       </div>
-                      <h3 className="font-bold text-xl group-hover:text-primary transition-colors line-clamp-2 text-slate-800 tracking-tight">{item.title}</h3>
+                      <h3 className="font-bold text-xl group-hover:text-[var(--primary)] transition-colors line-clamp-2 text-slate-800 tracking-tight">{item.title}</h3>
                     </CardContent>
                   </Card>
-                ))}
+                )) : (
+                  <div className="py-12 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100">
+                    <BookOpen className="h-12 w-12 text-slate-200 mx-auto mb-4" />
+                    <h3 className="text-lg font-bold text-slate-900">Belum ada berita</h3>
+                    <p className="text-slate-500 text-sm">Kembali lagi nanti untuk informasi terbaru dari sekolah kami.</p>
+                  </div>
+                )}
               </div>
             </section>
           </div>
@@ -254,17 +295,37 @@ export default function SchoolPage() {
               </CardContent>
             </Card>
 
+            {dynamicInfo.length > 0 && (
+              <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
+                <div className="bg-slate-50 p-6 border-b border-slate-100">
+                  <h3 className="text-lg font-black uppercase tracking-widest text-slate-800">Informasi Tambahan</h3>
+                </div>
+                <CardContent className="p-6 space-y-4">
+                  {dynamicInfo.map((info, idx) => (
+                    <div key={idx} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{info.label}</span>
+                      <span className="text-sm font-black text-slate-700">{info.value}</span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="bg-primary text-white shadow-2xl border-none rounded-3xl overflow-hidden relative group">
               <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20" />
               <CardContent className="p-8 relative z-10">
                 <h3 className="font-black text-2xl mb-4 tracking-tighter uppercase leading-none">Butuh Bantuan?</h3>
                 <p className="text-sm text-white/80 mb-8 leading-relaxed font-medium">Hubungi bagian administrasi sekolah untuk informasi lebih lanjut mengenai pendaftaran atau program sekolah.</p>
                 <div className="space-y-3">
-                  <Button variant="secondary" className="w-full font-black uppercase tracking-widest rounded-xl py-6 shadow-xl hover:scale-105 transition-transform flex items-center gap-2">
-                    <Phone className="h-4 w-4" /> Hubungi WA
+                  <Button variant="secondary" className="w-full font-black uppercase tracking-widest rounded-xl py-6 shadow-xl hover:scale-105 transition-transform flex items-center gap-2" asChild>
+                    <a href={schoolWA ? `https://wa.me/${schoolWA.replace(/\D/g, '')}` : '#'} target="_blank">
+                      <Phone className="h-4 w-4" /> Hubungi WA
+                    </a>
                   </Button>
-                  <Button variant="outline" className="w-full bg-white/10 border-white/20 hover:bg-white/20 text-white font-black uppercase tracking-widest rounded-xl py-6 flex items-center gap-2">
-                    <Mail className="h-4 w-4" /> Email Kami
+                  <Button variant="outline" className="w-full bg-white/10 border-white/20 hover:bg-white/20 text-white font-black uppercase tracking-widest rounded-xl py-6 flex items-center gap-2" asChild>
+                    <a href={`mailto:${schoolEmail}`}>
+                      <Mail className="h-4 w-4" /> Email Kami
+                    </a>
                   </Button>
                 </div>
               </CardContent>
