@@ -38,7 +38,12 @@ export default function SchoolPage() {
             theme_color,
             school_data (
               npsn,
-              stats
+              jml_siswa,
+              jml_guru,
+              lat,
+              lng,
+              stats,
+              dynamic_info
             )
           `)
           .eq('slug', site)
@@ -95,7 +100,7 @@ export default function SchoolPage() {
   }
 
   const data = school.school_data?.[0] || {};
-  const stats = data.stats || {};
+  const stats = data.stats || data.dynamic_info || {};
   const schoolAddress = school.address || stats.address || 'Kecamatan Cilebar, Karawang, Jawa Barat';
   const schoolEmail = stats.kontak_email || 'info@cilebar.datadik.id';
   const schoolWA = stats.kontak_wa || '';
@@ -200,8 +205,8 @@ export default function SchoolPage() {
                   <CilebarMap schools={[{
                     id: school.id,
                     name: school.name,
-                    lat: stats.lat || -6.2146,
-                    lng: stats.lng || 107.3000,
+                    lat: (stats.lat ?? data.lat) || -6.2146,
+                    lng: (stats.lng ?? data.lng) || 107.3000,
                     slug: school.slug,
                     npsn: data.npsn
                   }]} />

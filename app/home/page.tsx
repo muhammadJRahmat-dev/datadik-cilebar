@@ -51,25 +51,40 @@ export default function HomePage() {
             id,
             name,
             slug,
+            type,
             school_data (
               npsn,
-              stats
+              jml_siswa,
+              jml_guru,
+              lat,
+              lng,
+              stats,
+              dynamic_info
             )
-          `);
+          `)
+          .eq('type', 'sekolah');
 
         if (orgError) throw orgError;
 
         if (orgs) {
           const formattedSchools = orgs.map(org => {
             const schoolData = org.school_data?.[0] || {};
-            const stats = schoolData.stats || {};
-            
+            const stats = schoolData.stats || schoolData.dynamic_info || {};
+            const lat = stats.lat ?? schoolData.lat;
+            const lng = stats.lng ?? schoolData.lng;
+            const siswa = stats.siswa ?? schoolData.jml_siswa ?? 0;
+            const guru = stats.guru ?? schoolData.jml_guru ?? 0;
+            const jenis = stats.jenis ?? org.type ?? 'Lainnya';
+
             return {
               id: org.id,
               name: org.name,
               slug: org.slug,
-              lat: stats.lat || (-6.2146 + (Math.random() - 0.5) * 0.05),
-              lng: stats.lng || (107.3000 + (Math.random() - 0.5) * 0.05),
+              jenis,
+              lat: lat ?? (-6.2146 + (Math.random() - 0.5) * 0.05),
+              lng: lng ?? (107.3000 + (Math.random() - 0.5) * 0.05),
+              siswa,
+              guru,
               npsn: schoolData.npsn,
               ...stats
             };
