@@ -36,6 +36,13 @@ export default function HomePage() {
 
   useEffect(() => {
     async function fetchData() {
+      const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+      const hasSupabase = !!url && !!key && !url.includes('placeholder.supabase.co');
+      if (!hasSupabase) {
+        setLoading(false);
+        return;
+      }
       try {
         // 1. Fetch Schools
         const { data: orgs, error: orgError } = await supabase
@@ -78,7 +85,7 @@ export default function HomePage() {
             const currentTypeData = typeMap.get(type) || { count: 0, siswa: 0 };
             typeMap.set(type, {
               count: currentTypeData.count + 1,
-              siswa: currentTypeData.count + (curr.siswa || 0)
+              siswa: currentTypeData.siswa + (curr.siswa || 0)
             });
 
             return {
@@ -103,6 +110,7 @@ export default function HomePage() {
           .select(`
             id,
             title,
+            content,
             category,
             created_at,
             organizations (
@@ -153,7 +161,7 @@ export default function HomePage() {
       
       <main className="grow pt-16">
         {/* Hero Section */}
-        <section className="relative py-24 md:py-32 overflow-hidden bg-white border-b">
+        <section id="tentang" className="relative py-24 md:py-32 overflow-hidden bg-white border-b">
           <div className="absolute inset-0 bg-grid-slate-200 mask-[linear-gradient(180deg,white,transparent)]" />
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.05),transparent_70%)]" />
           
@@ -292,7 +300,7 @@ export default function HomePage() {
                 <input 
                   type="text" 
                   placeholder="Cari nama sekolah atau NPSN..." 
-                  className="pl-10 pr-4 py-2 rounded-full border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary w-full sm:w-[300px] transition-all"
+                  className="pl-10 pr-4 py-2 rounded-full border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary w-full sm:w-75 transition-all"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
@@ -317,7 +325,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-3xl overflow-hidden border-none shadow-2xl relative h-[500px] bg-slate-100">
+          <div className="rounded-3xl overflow-hidden border-none shadow-2xl relative h-125 bg-slate-100">
             <CilebarMap schools={filteredSchools} />
             {filteredSchools.length === 0 && !loading && (
               <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-50">
@@ -407,7 +415,7 @@ export default function HomePage() {
                     <CardContent className="p-8 pt-4 grow flex flex-col justify-between">
                       <div>
                         <p className="text-slate-500 text-sm leading-relaxed line-clamp-3 mb-6 font-medium">
-                          {post.content.replace(/<[^>]*>/g, '').substring(0, 120)}...
+                          {(post.content || '').replace(/<[^>]*>/g, '').substring(0, 120)}...
                         </p>
                       </div>
 

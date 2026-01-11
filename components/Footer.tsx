@@ -15,7 +15,10 @@ export default function Footer() {
     const mainDomain = 'datadikcilebar.my.id';
     const isSubdomain = host !== mainDomain && host !== `www.${mainDomain}` && !host.includes('localhost:3000');
     
-    if (isSubdomain || (host.includes('localhost') && host.split('.').length > 1)) {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    const hasSupabase = !!url && !!key && !url.includes('placeholder.supabase.co');
+    if ((isSubdomain || (host.includes('localhost') && host.split('.').length > 1)) && hasSupabase) {
       const slug = host.split('.')[0];
       if (slug && slug !== 'www' && slug !== 'localhost') {
         supabase
@@ -85,7 +88,7 @@ export default function Footer() {
             <ul className="space-y-4 text-sm">
               {org ? (
                 <>
-                  <li><span className="text-slate-500 font-bold uppercase tracking-tighter block text-[10px]">NPSN</span> {stats.npsn || '-'}</li>
+                  <li><span className="text-slate-500 font-bold uppercase tracking-tighter block text-[10px]">NPSN</span> {org?.school_data?.[0]?.npsn || '-'}</li>
                   <li><span className="text-slate-500 font-bold uppercase tracking-tighter block text-[10px]">Status</span> {stats.status || 'AKTIF'}</li>
                   <li><span className="text-slate-500 font-bold uppercase tracking-tighter block text-[10px]">Tipe</span> {org.type || 'SEKOLAH'}</li>
                 </>

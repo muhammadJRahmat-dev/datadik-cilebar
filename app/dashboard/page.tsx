@@ -11,7 +11,7 @@ import {
   School, 
   Users, 
   Settings, 
-  Bell, 
+  // Bell, 
   Plus, 
   FileText, 
   Trash2, 
@@ -21,7 +21,7 @@ import {
   AlertCircle,
   Clock,
   ExternalLink,
-  ChevronRight,
+  // ChevronRight,
   Globe,
   Upload,
   Loader2,
@@ -29,6 +29,8 @@ import {
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
+
+const KNOWN_KEYS = ['siswa', 'guru', 'pegawai', 'rombel', 'jenis', 'status', 'visi', 'misi', 'kontak_wa', 'kontak_email', 'last_sync', 'lat', 'lng', 'address'];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -56,7 +58,6 @@ export default function DashboardPage() {
   const [dynamicFields, setDynamicFields] = useState<{key: string, value: string, type: 'text' | 'number' | 'date'}[]>([]);
 
   // Known keys that shouldn't appear in dynamic fields list
-  const KNOWN_KEYS = ['siswa', 'guru', 'pegawai', 'rombel', 'jenis', 'status', 'visi', 'misi', 'kontak_wa', 'kontak_email', 'last_sync', 'lat', 'lng', 'address'];
 
   // Post Modal States
   const [isPostModalOpen, setIsPostModalOpen] = useState(false);
@@ -106,7 +107,7 @@ export default function DashboardPage() {
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `${path}/${fileName}`;
 
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('assets')
         .upload(filePath, file);
 
@@ -871,7 +872,7 @@ export default function DashboardPage() {
       {/* Post Modal */}
       <AnimatePresence>
         {isPostModalOpen && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -990,7 +991,7 @@ export default function DashboardPage() {
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Isi Konten</label>
                     <textarea 
                       required
-                      className="w-full min-h-[250px] p-4 font-medium rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all resize-none"
+                    className="w-full min-h-62.5 p-4 font-medium rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all resize-none"
                       placeholder="Tuliskan isi berita di sini secara lengkap..."
                       value={postFormData.content}
                       onChange={(e) => setPostFormData({...postFormData, content: e.target.value})}
@@ -1008,7 +1009,7 @@ export default function DashboardPage() {
                   </Button>
                   <Button 
                     type="submit" 
-                    className="flex-[2] bg-primary hover:bg-primary/90 text-white h-14 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 transition-all active:scale-95" 
+                    className="flex-2 bg-primary hover:bg-primary/90 text-white h-14 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20 transition-all active:scale-95" 
                     disabled={isSavingPost}
                   >
                     {isSavingPost ? 'Menyimpan...' : 'Simpan & Publikasikan'}
@@ -1027,7 +1028,7 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 50, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.9 }}
-            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200]"
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-200"
           >
             <div className={`px-6 py-4 rounded-[2rem] shadow-2xl flex items-center gap-4 border-2 ${
               toast.type === 'success' ? 'bg-white border-green-100 text-slate-900' : 'bg-white border-red-100 text-slate-900'

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { School, Menu, X, Loader2 } from 'lucide-react';
+import { School, Menu, X, ChevronDown } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { supabase } from '@/lib/supabase';
@@ -10,7 +10,10 @@ export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [org, setOrg] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
+  const [schools, setSchools] = useState<any[]>([]);
+  const [partners, setPartners] = useState<any[]>([]);
+  const [isSchoolsOpen, setIsSchoolsOpen] = useState(false);
+  const [isPartnersOpen, setIsPartnersOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,7 +29,6 @@ export default function Navbar() {
     if (isSubdomain || (host.includes('localhost') && host.split('.').length > 1)) {
       const slug = host.split('.')[0];
       if (slug && slug !== 'www' && slug !== 'localhost') {
-        setLoading(true);
         supabase
           .from('organizations')
           .select('name, logo_url, theme_color')
@@ -34,22 +36,30 @@ export default function Navbar() {
           .single()
           .then(({ data }) => {
             if (data) setOrg(data);
-            setLoading(false);
           });
       }
+    }
+
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+    const hasSupabase = !!url && !!key && !url.includes('placeholder.supabase.co');
+    if (hasSupabase) {
+      supabase
+        .from('organizations')
+        .select('name, slug, type')
+        .order('name', { ascending: true })
+        .then(({ data }) => {
+          if (Array.isArray(data)) {
+            setSchools(data.filter((o) => o.type === 'sekolah').slice(0, 10));
+            setPartners(data.filter((o) => o.type !== 'sekolah').slice(0, 10));
+          }
+        });
     }
 
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const mainDomain = 'datadikcilebar.my.id';
-  // Logic to determine if we are on a subdomain or localhost
-  const getHomeUrl = () => {
-    if (typeof window === 'undefined') return '/';
-    const host = window.location.host;
-    if (host.includes('localhost')) return 'http://localhost:3000';
-    return `https://${mainDomain}`;
-  };
+  const getHomeUrl = () => '/';
 
   const themeColor = org?.theme_color || '#2563eb';
 
@@ -62,19 +72,19 @@ export default function Navbar() {
           href={getHomeUrl()} 
           className="flex items-center gap-2 group"
         >
-          <div className="bg-[var(--nav-primary)] p-2 rounded-lg shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center overflow-hidden w-10 h-10">
+          <div className="bg-(--nav-primary) p-2 rounded-lg shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center overflow-hidden w-10 h-10">
             {org?.logo_url ? (
               <img src={org.logo_url} alt={org.name} className="w-full h-full object-contain" />
             ) : (
               <School className="h-6 w-6 text-white" />
             )}
           </div>
-          <div className="flex flex-col max-w-[150px] sm:max-w-none">
-            <span className={`font-bold text-lg sm:text-xl tracking-tight leading-none text-[var(--nav-primary)] truncate`}>
+          <div className="flex flex-col max-w-37.5 sm:max-w-none">
+            <span className={`font-bold text-lg sm:text-xl tracking-tight leading-none text-(--nav-primary) truncate`}>
               {org?.name ? org.name.split(' ')[0] : 'DATADIK'}
             </span>
-            <span className={`text-[9px] sm:text-[10px] font-bold tracking-[0.1em] sm:tracking-[0.2em] uppercase leading-none mt-1 ${
-              isScrolled ? 'text-muted-foreground' : 'text-[var(--nav-primary)]/70'
+            <span className={`text-[9px] sm:text-[10px] font-bold tracking-widest uppercase leading-none mt-1 ${
+              isScrolled ? 'text-muted-foreground' : 'text-(--nav-primary)/70'
             } truncate`}>
               {org?.name ? org.name.split(' ').slice(1).join(' ') : 'Cilebar - Karawang'}
             </span>
@@ -83,23 +93,63 @@ export default function Navbar() {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-6">
-          <Link href={getHomeUrl()} className="text-sm font-bold uppercase tracking-wider hover:text-[var(--nav-primary)] transition-colors">Beranda</Link>
-          <Link href={`${getHomeUrl()}#statistik`} className="text-sm font-bold uppercase tracking-wider hover:text-[var(--nav-primary)] transition-colors">Statistik</Link>
-          <Link href={`${getHomeUrl()}#peta`} className="text-sm font-bold uppercase tracking-wider hover:text-[var(--nav-primary)] transition-colors">Peta</Link>
+          <Link href={getHomeUrl()} className="text-sm font-bold uppercase tracking-wider hover:text-(--nav-primary) transition-colors">Beranda</Link>
+          <Link href={`${getHomeUrl()}#tentang`} className="text-sm font-bold uppercase tracking-wider hover:text-(--nav-primary) transition-colors">Tentang</Link>
+          <Link href={`${getHomeUrl()}#statistik`} className="text-sm font-bold uppercase tracking-wider hover:text-(--nav-primary) transition-colors">Statistik</Link>
+          <Link href={`${getHomeUrl()}#peta`} className="text-sm font-bold uppercase tracking-wider hover:text-(--nav-primary) transition-colors">Peta</Link>
+          
+          <div className="relative">
+            <button 
+              className="text-sm font-bold uppercase tracking-wider hover:text-(--nav-primary) transition-colors inline-flex items-center gap-1"
+              onClick={() => { setIsPartnersOpen(!isPartnersOpen); setIsSchoolsOpen(false); }}
+            >
+              Organisasi Mitra <ChevronDown className="h-4 w-4" />
+            </button>
+            {isPartnersOpen && (
+              <div className="absolute top-full right-0 mt-2 w-64 bg-white border shadow-xl rounded-xl p-2 z-100">
+                {partners.length > 0 ? partners.map((p) => (
+                  <Link key={p.slug} href={`/sites/${p.slug}`} className="block px-3 py-2 rounded-lg hover:bg-(--nav-primary)/5">
+                    {p.name}
+                  </Link>
+                )) : (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">Belum ada data</div>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="relative">
+            <button 
+              className="text-sm font-bold uppercase tracking-wider hover:text-(--nav-primary) transition-colors inline-flex items-center gap-1"
+              onClick={() => { setIsSchoolsOpen(!isSchoolsOpen); setIsPartnersOpen(false); }}
+            >
+              Sekolah <ChevronDown className="h-4 w-4" />
+            </button>
+            {isSchoolsOpen && (
+              <div className="absolute top-full right-0 mt-2 w-64 bg-white border shadow-xl rounded-xl p-2 z-100">
+                {schools.length > 0 ? schools.map((s) => (
+                  <Link key={s.slug} href={`/sites/${s.slug}`} className="block px-3 py-2 rounded-lg hover:bg-(--nav-primary)/5">
+                    {s.name}
+                  </Link>
+                )) : (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">Belum ada data</div>
+                )}
+              </div>
+            )}
+          </div>
           
           <div className="flex items-center gap-2 ml-4">
-            <Button variant="ghost" asChild className="font-bold uppercase tracking-wider text-[var(--nav-primary)] hover:bg-[var(--nav-primary)]/5">
+            <Button variant="ghost" asChild className="font-bold uppercase tracking-wider text-(--nav-primary) hover:bg-(--nav-primary)/5">
               <Link href="/login">Login</Link>
             </Button>
-            <Button asChild className="font-bold uppercase tracking-wider shadow-lg hover:shadow-primary/20 bg-[var(--nav-primary)] hover:opacity-90 transition-opacity">
-              <Link href="https://dapo.kemdikbud.go.id" target="_blank">Cek Dapodik</Link>
+            <Button asChild className="font-bold uppercase tracking-wider shadow-lg hover:shadow-primary/20 bg-(--nav-primary) hover:opacity-90 transition-opacity">
+              <Link href="https://dapo.kemendikdasmen.go.id/progres/3/022132" target="_blank">Cek Dapodik</Link>
             </Button>
           </div>
         </div>
 
         {/* Mobile Toggle */}
         <button 
-          className="md:hidden p-2 text-[var(--nav-primary)]"
+          className="md:hidden p-2 text-(--nav-primary)"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
           {isMobileMenuOpen ? <X /> : <Menu />}
@@ -110,14 +160,50 @@ export default function Navbar() {
       {isMobileMenuOpen && (
         <div className="md:hidden absolute top-full left-0 right-0 bg-white border-b shadow-2xl p-4 flex flex-col gap-4 animate-in slide-in-from-top duration-300">
           <Link href={getHomeUrl()} className="font-bold py-2 border-b">BERANDA</Link>
+          <Link href={`${getHomeUrl()}#tentang`} className="font-bold py-2 border-b">TENTANG</Link>
           <Link href={`${getHomeUrl()}#statistik`} className="font-bold py-2 border-b">STATISTIK</Link>
           <Link href={`${getHomeUrl()}#peta`} className="font-bold py-2 border-b">PETA</Link>
+          
+          <div className="border-t pt-2">
+            <button 
+              className="w-full text-left font-bold py-2 flex items-center justify-between"
+              onClick={() => setIsPartnersOpen(!isPartnersOpen)}
+            >
+              ORGANISASI MITRA <ChevronDown className="h-4 w-4" />
+            </button>
+            {isPartnersOpen && (
+              <div className="flex flex-col gap-1 pl-2">
+                {partners.length > 0 ? partners.map((p) => (
+                  <Link key={p.slug} href={`/sites/${p.slug}`} className="py-2 text-sm">
+                    {p.name}
+                  </Link>
+                )) : <span className="py-2 text-sm text-muted-foreground">Belum ada data</span>}
+              </div>
+            )}
+          </div>
+          <div>
+            <button 
+              className="w-full text-left font-bold py-2 flex items-center justify-between"
+              onClick={() => setIsSchoolsOpen(!isSchoolsOpen)}
+            >
+              SEKOLAH <ChevronDown className="h-4 w-4" />
+            </button>
+            {isSchoolsOpen && (
+              <div className="flex flex-col gap-1 pl-2">
+                {schools.length > 0 ? schools.map((s) => (
+                  <Link key={s.slug} href={`/sites/${s.slug}`} className="py-2 text-sm">
+                    {s.name}
+                  </Link>
+                )) : <span className="py-2 text-sm text-muted-foreground">Belum ada data</span>}
+              </div>
+            )}
+          </div>
           <div className="flex flex-col gap-2 mt-2">
-            <Button variant="outline" asChild className="w-full border-[var(--nav-primary)] text-[var(--nav-primary)] hover:bg-[var(--nav-primary)]/5 font-bold">
+            <Button variant="outline" asChild className="w-full border-(--nav-primary) text-(--nav-primary) hover:bg-(--nav-primary)/5 font-bold">
               <Link href="/login">LOGIN OPERATOR</Link>
             </Button>
-            <Button asChild className="w-full bg-[var(--nav-primary)] hover:opacity-90 font-bold">
-              <Link href="https://dapo.kemdikbud.go.id" target="_blank">CEK DAPODIK</Link>
+            <Button asChild className="w-full bg-(--nav-primary) hover:opacity-90 font-bold">
+              <Link href="https://dapo.kemendikdasmen.go.id/progres/3/022132" target="_blank">CEK DAPODIK</Link>
             </Button>
           </div>
         </div>

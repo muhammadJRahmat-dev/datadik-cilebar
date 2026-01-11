@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { supabase } from '@/lib/supabase';
@@ -15,14 +15,14 @@ const LIST_URLS = [
 ];
 const REFERENSI_DETAIL_URL = 'https://referensi.data.kemendikdasmen.go.id/tabs.php?npsn=';
 
-export async function GET(req: NextRequest) {
+export async function GET() {
   try {
-    console.log('Starting advanced sync from Kemendikdasmen...');
+    console.warn('Starting advanced sync from Kemendikdasmen...');
     
     const allSchools: any[] = [];
 
     for (const url of LIST_URLS) {
-      console.log(`Fetching list from: ${url}`);
+      console.warn(`Fetching list from: ${url}`);
       const { data: listHtml } = await axios.get(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -51,12 +51,12 @@ export async function GET(req: NextRequest) {
       throw new Error('Tidak ada data sekolah ditemukan.');
     }
 
-    console.log(`Found ${allSchools.length} schools to process.`);
+    console.warn(`Found ${allSchools.length} schools to process.`);
     const results = [];
 
     for (const school of allSchools) {
       try {
-        console.log(`Syncing details for: ${school.name} (${school.npsn})`);
+        console.warn(`Syncing details for: ${school.name} (${school.npsn})`);
         
         const { data: detailHtml } = await axios.get(`${REFERENSI_DETAIL_URL}${school.npsn}`, {
           headers: { 'User-Agent': 'Mozilla/5.0' },

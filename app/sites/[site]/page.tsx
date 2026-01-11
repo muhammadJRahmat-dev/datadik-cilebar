@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { School, Users, GraduationCap, MapPin, Calendar, BookOpen, Loader2, ArrowLeft, Globe, ShieldCheck, Award, Phone, Mail } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { School, Users, GraduationCap, MapPin, Calendar, BookOpen, Loader2, Globe, ShieldCheck, Award, Phone, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -12,7 +12,7 @@ import dynamic from 'next/dynamic';
 
 const CilebarMap = dynamic(() => import('@/components/map/CilebarMap'), { 
   ssr: false,
-  loading: () => <div className="h-[400px] w-full bg-muted animate-pulse rounded-3xl" />
+  loading: () => <div className="h-100 w-full bg-muted animate-pulse rounded-3xl" />
 });
 
 export default function SchoolPage() {
@@ -127,7 +127,7 @@ export default function SchoolPage() {
             </div>
             <div className="text-center md:text-left grow">
               <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
-                <span className="px-3 py-1 rounded-full bg-[var(--primary)] text-white text-[10px] font-black uppercase tracking-[0.2em]">
+                <span className="px-3 py-1 rounded-full bg-(--primary) text-white text-[10px] font-black uppercase tracking-widest">
                   {school.type || stats.jenis || 'SEKOLAH'}
                 </span>
                 <span className="px-3 py-1 rounded-full bg-green-500 text-white text-[10px] font-black uppercase tracking-[0.2em]">
@@ -139,18 +139,18 @@ export default function SchoolPage() {
               </h1>
               <div className="flex flex-wrap justify-center md:justify-start gap-6 text-slate-400 font-medium">
                 <span className="flex items-center gap-2 hover:text-white transition-colors cursor-default">
-                  <MapPin className="h-4 w-4 text-[var(--primary)]" /> {schoolAddress}
+                  <MapPin className="h-4 w-4 text-(--primary)" /> {schoolAddress}
                 </span>
                 <span className="flex items-center gap-2 hover:text-white transition-colors cursor-default">
-                  <ShieldCheck className="h-4 w-4 text-[var(--primary)]" /> NPSN: {data.npsn || '-'}
+                  <ShieldCheck className="h-4 w-4 text-(--primary)" /> NPSN: {data.npsn || '-'}
                 </span>
                 <span className="flex items-center gap-2 hover:text-white transition-colors cursor-default">
-                  <Globe className="h-4 w-4 text-[var(--primary)]" /> {school.slug}.datadikcilebar.my.id
+                  <Globe className="h-4 w-4 text-(--primary)" /> {school.slug}.datadikcilebar.my.id
                 </span>
               </div>
             </div>
             <div className="hidden lg:block">
-              <Button size="lg" className="rounded-2xl font-bold px-8 py-8 h-auto shadow-xl shadow-primary/20 bg-[var(--primary)] hover:opacity-90 transition-opacity" asChild>
+              <Button size="lg" className="rounded-2xl font-bold px-8 py-8 h-auto shadow-xl shadow-primary/20 bg-(--primary) hover:opacity-90 transition-opacity" asChild>
                 <a href={schoolWA ? `https://wa.me/${schoolWA.replace(/\D/g, '')}` : '#'} target="_blank">
                   HUBUNGI SEKOLAH
                 </a>
@@ -192,7 +192,7 @@ export default function SchoolPage() {
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <MapPin className="h-6 w-6 text-[var(--primary)]" /> Lokasi Sekolah
+                  <MapPin className="h-6 w-6 text-(--primary)" /> Lokasi Sekolah
                 </h2>
               </div>
               <Card className="border-none shadow-xl rounded-3xl overflow-hidden">
@@ -215,9 +215,9 @@ export default function SchoolPage() {
             <section>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <BookOpen className="h-6 w-6 text-[var(--primary)]" /> Berita & Pengumuman
+                  <BookOpen className="h-6 w-6 text-(--primary)" /> Berita & Pengumuman
                 </h2>
-                <Button variant="ghost" className="text-[var(--primary)] font-bold">Lihat Semua</Button>
+                <Button variant="ghost" className="text-(--primary) font-bold">Lihat Semua</Button>
               </div>
               <div className="grid gap-4">
                 {posts.length > 0 ? posts.map((item) => (
@@ -235,7 +235,7 @@ export default function SchoolPage() {
                           {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
                       </div>
-                      <h3 className="font-bold text-xl group-hover:text-[var(--primary)] transition-colors line-clamp-2 text-slate-800 tracking-tight">{item.title}</h3>
+                      <h3 className="font-bold text-xl group-hover:text-(--primary) transition-colors line-clamp-2 text-slate-800 tracking-tight">{item.title}</h3>
                     </CardContent>
                   </Card>
                 )) : (

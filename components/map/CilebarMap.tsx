@@ -1,7 +1,7 @@
 'use client';
 
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker as LeafletMarker, Popup as LeafletPopup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -121,7 +121,7 @@ export default function CilebarMap({ schools }: { schools: SchoolMarker[] }) {
 
   if (mapError || !process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
     return (
-      <div className="h-[500px] w-full rounded-xl overflow-hidden border shadow-md relative">
+      <div className="h-125 w-full rounded-xl overflow-hidden border shadow-md relative">
         <MapContainer 
           center={[defaultCenter.lat, defaultCenter.lng]} 
           zoom={13} 
@@ -165,16 +165,16 @@ export default function CilebarMap({ schools }: { schools: SchoolMarker[] }) {
     );
   }
 
-  if (!isLoaded) return <div className="h-[500px] w-full rounded-xl flex items-center justify-center bg-slate-100 animate-pulse text-slate-400">Loading Map...</div>;
+  if (!isLoaded) return <div className="h-125 w-full rounded-xl flex items-center justify-center bg-slate-100 animate-pulse text-slate-400">Loading Map...</div>;
 
   return (
-    <div className="h-[500px] w-full rounded-xl overflow-hidden border shadow-md relative group">
+    <div className="h-125 w-full rounded-xl overflow-hidden border shadow-md relative group">
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={defaultCenter}
         zoom={13}
         options={mapOptions}
-        onLoad={() => console.log('Google Maps Loaded Successfully')}
+        onLoad={() => console.warn('Google Maps Loaded')}
       >
         {schools.map((school) => (
           <Marker

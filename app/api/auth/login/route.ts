@@ -9,11 +9,23 @@ const supabaseAdmin = createClient(
 
 export async function POST(req: NextRequest) {
   try {
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+    if (
+      !url ||
+      url.includes('placeholder.supabase.co') ||
+      !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+      !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      return NextResponse.json(
+        { error: 'Layanan autentikasi belum dikonfigurasi.' },
+        { status: 503 }
+      );
+    }
     const { npsn, password } = await req.json();
     const ip = req.headers.get('x-forwarded-for') || 'unknown';
 
     // 1. Check Brute Force (Max 5 attempts in 15 mins)
-    const { data: recentAttempts, error: checkError } = await supabaseAdmin
+    const { data: recentAttempts } = await supabaseAdmin
       .from('login_attempts')
       .select('id')
       .eq('npsn', npsn)
