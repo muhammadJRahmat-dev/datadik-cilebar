@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { ShieldCheck, Loader2, AlertCircle, School } from 'lucide-react';
 
 const loginSchema = z.object({
-  npsn: z.string().min(8, 'NPSN minimal 8 karakter').max(8, 'NPSN maksimal 8 karakter').regex(/^\d+$/, 'NPSN harus berupa angka'),
+  identifier: z.string().min(3, 'NPSN atau Email minimal 3 karakter'),
   password: z.string().min(6, 'Password minimal 6 karakter'),
 });
 
@@ -33,32 +33,33 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(values),
-      });
+      // Determine if it's NPSN or email
+      const isEmail = values.identifier.includes('@');
+      const loginEmail = isEmail ? values.identifier : `${values.identifier}@datadikcilebar.id`;
 
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || 'Terjadi kesalahan saat login.');
-      }
-
-      // 3. Login success - we need to set the session on the client side too
-      // The middleware and session handling in Supabase usually handles this via cookies
-      // but since we did a manual sign-in on the server, we might need to refresh
-      const { error: refreshError } = await supabase.auth.signInWithPassword({
-        email: `${values.npsn}@datadikcilebar.id`,
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
         password: values.password,
       });
 
-      if (refreshError) throw refreshError;
+      if (authError) throw authError;
 
-      router.push('/dashboard');
+      // Check role for redirection
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+
+      if (profile?.role === 'admin_kecamatan') {
+        router.push('/admin/kecamatan');
+      } else {
+        router.push('/dashboard');
+      }
+      
       router.refresh();
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message === 'Invalid login credentials' ? 'NPSN/Email atau Password salah.' : err.message);
     } finally {
       setLoading(false);
     }
@@ -103,16 +104,16 @@ export default function LoginPage() {
               )}
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-300 ml-1">NPSN</label>
+                <label className="text-sm font-medium text-slate-300 ml-1">NPSN / Email</label>
                 <div className="relative">
                   <Input
-                    {...register('npsn')}
-                    placeholder="Masukkan 8 digit NPSN"
+                    {...register('identifier')}
+                    placeholder="Masukkan NPSN atau Email"
                     className="bg-white/5 border-white/10 text-white placeholder:text-slate-600 rounded-xl pl-10 focus:ring-blue-500/50 focus:border-blue-500/50"
                   />
                   <School className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                 </div>
-                {errors.npsn && <p className="text-xs text-red-400 ml-1">{errors.npsn.message}</p>}
+                {errors.identifier && <p className="text-xs text-red-400 ml-1">{errors.identifier.message}</p>}
               </div>
 
               <div className="space-y-2">

@@ -3,10 +3,16 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 jobs:
   deploy:
     if: ${{ secrets.VERCEL_DEPLOY_HOOK_URL != '' }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: vercel-deploy-${{ github.ref }}
+      cancel-in-progress: true
     steps:
       - name: Trigger Vercel Deploy Hook
-        run: curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
+        env:
+          HOOK_URL: ${{ secrets.VERCEL_DEPLOY_HOOK_URL }}
+        run: curl -fsSL -X POST "$HOOK_URL"

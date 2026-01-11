@@ -8,19 +8,25 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LayoutGrid, Map as MapIcon, School, Users, Search, Filter, BookOpen, Calendar, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
+import { Skeleton } from '@/components/ui/skeleton';
+
 // Dynamic import for the map to avoid SSR issues with Leaflet
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 const CilebarMap = dynamic(() => import('@/components/map/CilebarMap'), { 
   ssr: false,
-  loading: () => <div className="h-[500px] w-full bg-muted animate-pulse rounded-xl" />
+  loading: () => <Skeleton className="h-125 w-full rounded-3xl" />
 });
 
 export default function HomePage() {
   const [schools, setSchools] = useState<any[]>([]);
+  const [partners, setPartners] = useState<any[]>([]);
   const [filteredSchools, setFilteredSchools] = useState<any[]>([]);
   const [latestPosts, setLatestPosts] = useState<any[]>([]);
+  const [totalPosts, setTotalPosts] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 6;
   const [activeCategory, setActiveCategory] = useState('semua');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedType, setSelectedType] = useState('Semua');
@@ -44,7 +50,7 @@ export default function HomePage() {
         return;
       }
       try {
-        // 1. Fetch Schools
+        // 1. Fetch Schools & Partners
         const { data: orgs, error: orgError } = await supabase
           .from('organizations')
           .select(`
@@ -52,6 +58,7 @@ export default function HomePage() {
             name,
             slug,
             type,
+            logo_url,
             school_data (
               npsn,
               jml_siswa,
@@ -62,36 +69,49 @@ export default function HomePage() {
               dynamic_info
             )
           `)
-          .eq('type', 'sekolah');
+          .in('type', ['sekolah', 'mitra']);
 
         if (orgError) throw orgError;
 
         if (orgs) {
-          const formattedSchools = orgs.map(org => {
-            const schoolData = org.school_data?.[0] || {};
-            const stats = schoolData.stats || schoolData.dynamic_info || {};
-            const lat = stats.lat ?? schoolData.lat;
-            const lng = stats.lng ?? schoolData.lng;
-            const siswa = stats.siswa ?? schoolData.jml_siswa ?? 0;
-            const guru = stats.guru ?? schoolData.jml_guru ?? 0;
-            const jenis = stats.jenis ?? org.type ?? 'Lainnya';
+          const formattedSchools = orgs
+            .filter(o => o.type === 'sekolah')
+            .map(org => {
+              const schoolData = org.school_data?.[0] || {};
+              const stats = schoolData.stats || schoolData.dynamic_info || {};
+              const lat = stats.lat ?? schoolData.lat;
+              const lng = stats.lng ?? schoolData.lng;
+              const siswa = stats.siswa ?? schoolData.jml_siswa ?? 0;
+              const guru = stats.guru ?? schoolData.jml_guru ?? 0;
+              const jenis = stats.jenis ?? (org.name.includes('SD') ? 'SD' : org.name.includes('SMP') ? 'SMP' : org.name.includes('SMK') ? 'SMK' : 'Lainnya');
 
-            return {
+              return {
+                id: org.id,
+                name: org.name,
+                slug: org.slug,
+                logo_url: org.logo_url,
+                jenis,
+                lat: lat ?? (-6.2146 + (Math.random() - 0.5) * 0.08),
+                lng: lng ?? (107.3000 + (Math.random() - 0.5) * 0.08),
+                siswa,
+                guru,
+                npsn: schoolData.npsn,
+                ...stats
+              };
+            });
+
+          const formattedPartners = orgs
+            .filter(o => o.type === 'mitra')
+            .map(org => ({
               id: org.id,
               name: org.name,
               slug: org.slug,
-              jenis,
-              lat: lat ?? (-6.2146 + (Math.random() - 0.5) * 0.05),
-              lng: lng ?? (107.3000 + (Math.random() - 0.5) * 0.05),
-              siswa,
-              guru,
-              npsn: schoolData.npsn,
-              ...stats
-            };
-          });
+              logo_url: org.logo_url
+            }));
 
           setSchools(formattedSchools);
           setFilteredSchools(formattedSchools);
+          setPartners(formattedPartners);
 
           // Calculate aggregate stats
           const typeMap = new Map<string, { count: number, siswa: number }>();
@@ -118,27 +138,6 @@ export default function HomePage() {
 
           setStats({ ...totals, byType });
         }
-
-        // 2. Fetch Latest Posts
-        const { data: posts, error: postError } = await supabase
-          .from('posts')
-          .select(`
-            id,
-            title,
-            content,
-            category,
-            created_at,
-            organizations (
-              name,
-              slug
-            )
-          `)
-          .eq('is_published', true)
-          .order('created_at', { ascending: false })
-          .limit(6);
-
-        if (!postError) setLatestPosts(posts || []);
-
       } catch (err) {
         console.error('Error fetching data:', err);
       } finally {
@@ -148,6 +147,44 @@ export default function HomePage() {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    async function fetchPosts() {
+      const from = (currentPage - 1) * postsPerPage;
+      const to = from + postsPerPage - 1;
+
+      let query = supabase
+        .from('posts')
+        .select(`
+          id,
+          title,
+          slug,
+          content,
+          category,
+          created_at,
+          organizations (
+            name,
+            slug
+          )
+        `, { count: 'exact' })
+        .eq('is_published', true);
+
+      if (activeCategory !== 'semua') {
+        query = query.eq('category', activeCategory);
+      }
+
+      const { data, count, error } = await query
+        .order('created_at', { ascending: false })
+        .range(from, to);
+
+      if (!error) {
+        setLatestPosts(data || []);
+        setTotalPosts(count || 0);
+      }
+    }
+
+    fetchPosts();
+  }, [currentPage, activeCategory]);
 
   useEffect(() => {
     let result = schools;
@@ -166,9 +203,31 @@ export default function HomePage() {
     setFilteredSchools(result);
   }, [searchQuery, selectedType, schools]);
 
-  const filteredPosts = activeCategory === 'semua' 
-    ? latestPosts 
-    : latestPosts.filter(p => p.category === activeCategory);
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory]);
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut"
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -211,61 +270,73 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-16">
           {/* Stats Grid */}
           <section id="statistik" className="mb-24">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-              <Card className="overflow-hidden border-none shadow-2xl bg-white group hover:scale-[1.05] transition-all duration-500 rounded-3xl relative">
-                <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
-                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Sekolah</CardTitle>
-                  <div className="p-2 bg-primary/5 rounded-xl group-hover:bg-primary group-hover:text-white transition-colors">
-                    <School className="h-5 w-5" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {loading ? (
-                    <div className="h-12 w-24 bg-slate-100 animate-pulse rounded-xl" />
-                  ) : (
-                    <div className="text-5xl font-black text-slate-900 tracking-tighter">{stats.totalSchools}</div>
-                  )}
-                  <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">Institusi Pendidikan</p>
-                </CardContent>
-              </Card>
+            <motion.div 
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12"
+            >
+              <motion.div variants={itemVariants}>
+                <Card className="overflow-hidden border-none shadow-2xl bg-white group hover:scale-[1.05] transition-all duration-500 rounded-3xl relative">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+                  <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                    <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Sekolah</CardTitle>
+                    <div className="p-2 bg-primary/5 rounded-xl group-hover:bg-primary group-hover:text-white transition-colors">
+                      <School className="h-5 w-5" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {loading ? (
+                      <Skeleton className="h-12 w-24 rounded-xl" />
+                    ) : (
+                      <div className="text-5xl font-black text-slate-900 tracking-tighter">{stats.totalSchools}</div>
+                    )}
+                    <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">Institusi Pendidikan</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
               
-              <Card className="overflow-hidden border-none shadow-2xl bg-white group hover:scale-[1.05] transition-all duration-500 rounded-3xl relative">
-                <div className="absolute top-0 left-0 w-1 h-full bg-blue-600" />
-                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Siswa</CardTitle>
-                  <div className="p-2 bg-blue-50 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                    <Users className="h-5 w-5 text-blue-600 group-hover:text-white" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {loading ? (
-                    <div className="h-12 w-32 bg-slate-100 animate-pulse rounded-xl" />
-                  ) : (
-                    <div className="text-5xl font-black text-slate-900 tracking-tighter">{stats.totalSiswa.toLocaleString('id-ID')}</div>
-                  )}
-                  <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">Peserta Didik Aktif</p>
-                </CardContent>
-              </Card>
+              <motion.div variants={itemVariants}>
+                <Card className="overflow-hidden border-none shadow-2xl bg-white group hover:scale-[1.05] transition-all duration-500 rounded-3xl relative">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-600" />
+                  <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                    <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Siswa</CardTitle>
+                    <div className="p-2 bg-blue-50 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                      <Users className="h-5 w-5 text-blue-600 group-hover:text-white" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {loading ? (
+                      <Skeleton className="h-12 w-32 rounded-xl" />
+                    ) : (
+                      <div className="text-5xl font-black text-slate-900 tracking-tighter">{stats.totalSiswa.toLocaleString('id-ID')}</div>
+                    )}
+                    <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">Peserta Didik Aktif</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
               
-              <Card className="overflow-hidden border-none shadow-2xl bg-white group hover:scale-[1.05] transition-all duration-500 rounded-3xl relative">
-                <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600" />
-                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Guru</CardTitle>
-                  <div className="p-2 bg-indigo-50 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-                    <LayoutGrid className="h-5 w-5 text-indigo-600 group-hover:text-white" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {loading ? (
-                    <div className="h-12 w-28 bg-slate-100 animate-pulse rounded-xl" />
-                  ) : (
-                    <div className="text-5xl font-black text-slate-900 tracking-tighter">{stats.totalGuru.toLocaleString('id-ID')}</div>
-                  )}
-                  <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">Pendidik Terdata</p>
-                </CardContent>
-              </Card>
-            </div>
+              <motion.div variants={itemVariants}>
+                <Card className="overflow-hidden border-none shadow-2xl bg-white group hover:scale-[1.05] transition-all duration-500 rounded-3xl relative">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600" />
+                  <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                    <CardTitle className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Total Guru</CardTitle>
+                    <div className="p-2 bg-indigo-50 rounded-xl group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+                      <LayoutGrid className="h-5 w-5 text-indigo-600 group-hover:text-white" />
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    {loading ? (
+                      <Skeleton className="h-12 w-28 rounded-xl" />
+                    ) : (
+                      <div className="text-5xl font-black text-slate-900 tracking-tighter">{stats.totalGuru.toLocaleString('id-ID')}</div>
+                    )}
+                    <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">Pendidik Terdata</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </motion.div>
 
             {/* Distribution Chart */}
             {!loading && stats.byType.length > 0 && (
@@ -368,6 +439,41 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Partners Section */}
+        {partners.length > 0 && (
+          <section id="mitra" className="mb-24 py-16 bg-slate-50 rounded-[3rem] border border-slate-100 overflow-hidden relative">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="container mx-auto px-8 relative z-10">
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-black tracking-tight uppercase mb-2">Organisasi Mitra</h2>
+                <p className="text-slate-500 font-medium">Berkolaborasi untuk memajukan pendidikan di Cilebar</p>
+              </div>
+              
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+                {partners.map((partner) => (
+                  <motion.a
+                    key={partner.id}
+                    href={`/sites/${partner.slug}`}
+                    whileHover={{ scale: 1.05 }}
+                    className="flex flex-col items-center group"
+                  >
+                    <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center shadow-xl border border-slate-100 mb-4 group-hover:border-primary/50 transition-colors p-4">
+                      {partner.logo_url ? (
+                        <img src={partner.logo_url} alt={partner.name} className="w-full h-full object-contain" />
+                      ) : (
+                        <Users className="h-10 w-10 text-slate-300 group-hover:text-primary transition-colors" />
+                      )}
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-900 transition-colors text-center">
+                      {partner.name}
+                    </span>
+                  </motion.a>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Latest News Aggregator */}
         <section id="berita" className="mb-24">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
@@ -398,87 +504,125 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <motion.div 
+            variants={containerVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          >
             <AnimatePresence mode="popLayout">
-              {filteredPosts.length > 0 ? filteredPosts.map((post) => (
-                <motion.div
-                  layout
-                  key={post.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.4 }}
-                >
-                  <Card className="group border-none shadow-xl hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] overflow-hidden bg-white flex flex-col h-full">
-                    <CardHeader className="p-8 pb-0">
-                      <div className="flex justify-between items-start mb-4">
-                        <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${
-                          post.category === 'pengumuman' ? 'bg-amber-100 text-amber-600' : 
-                          post.category === 'agenda' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
-                        }`}>
-                          {post.category}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-2">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(post.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
-                        </span>
+              {loading ? (
+                // Skeleton loading for news
+                Array.from({ length: 6 }).map((_, i) => (
+                  <motion.div key={`skeleton-${i}`} variants={itemVariants}>
+                    <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white h-full">
+                      <div className="p-8 pb-0">
+                        <Skeleton className="h-4 w-20 mb-4 rounded-xl" />
+                        <Skeleton className="h-8 w-full mb-4 rounded-xl" />
+                        <Skeleton className="h-4 w-1/2 rounded-xl" />
                       </div>
-                      <h3 className="text-xl font-black group-hover:text-primary transition-colors line-clamp-2 leading-tight tracking-tight mb-2">
-                        {post.title}
-                      </h3>
-                    </CardHeader>
-                    <CardContent className="p-8 pt-4 grow flex flex-col justify-between">
-                      <div>
-                        <p className="text-slate-500 text-sm leading-relaxed line-clamp-3 mb-6 font-medium">
-                          {(post.content || '').replace(/<[^>]*>/g, '').substring(0, 120)}...
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-3 mb-6 p-3 bg-slate-50 rounded-2xl group-hover:bg-primary/5 transition-colors">
-                        <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center shadow-sm border border-slate-100">
-                          <School className="h-4 w-4 text-slate-400" />
-                        </div>
-                        <span className="text-xs font-bold text-slate-600 truncate uppercase tracking-tighter">
-                          {post.organizations?.name}
-                        </span>
-                      </div>
-
-                      <Button variant="ghost" className="w-full justify-between font-black uppercase tracking-widest text-[10px] group/btn hover:bg-primary hover:text-white rounded-xl py-6 transition-all duration-300" asChild>
-                        <a 
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const slug = post.organizations?.slug;
-                            if (!slug) return;
-                            const host = window.location.host;
-                            const url = host.includes('localhost') 
-                              ? `http://${slug}.localhost:3000` 
-                              : `https://${slug}.datadikcilebar.my.id`;
-                            window.open(url, '_blank');
-                          }}
-                        >
-                          Baca Selengkapnya
-                          <ArrowRight className="h-4 w-4 group-hover/btn:translate-x-1 transition-transform" />
-                        </a>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )) : (
-                <motion.div 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="col-span-full py-24 text-center bg-white rounded-[3rem] shadow-xl shadow-slate-100/50 border-2 border-dashed border-slate-100"
-                >
-                  <div className="w-20 h-20 bg-slate-50 rounded-[2rem] flex items-center justify-center mx-auto mb-6">
-                    <BookOpen className="h-8 w-8 text-slate-200" />
+                      <CardContent className="p-8 pt-4 grow">
+                        <Skeleton className="h-4 w-full mb-2 rounded-xl" />
+                        <Skeleton className="h-4 w-full mb-2 rounded-xl" />
+                        <Skeleton className="h-4 w-2/3 rounded-xl" />
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))
+              ) : latestPosts.length > 0 ? (
+                latestPosts.map((post) => (
+                  <motion.div
+                    layout
+                    key={post.id}
+                    variants={itemVariants}
+                  >
+                    <a href={`/posts/${post.slug}`} className="block h-full">
+                      <Card className="group border-none shadow-xl hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] overflow-hidden bg-white flex flex-col h-full cursor-pointer">
+                        <CardHeader className="p-8 pb-0">
+                          <div className="flex justify-between items-start mb-4">
+                            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${
+                              post.category === 'pengumuman' ? 'bg-amber-100 text-amber-600' : 
+                              post.category === 'agenda' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
+                            }`}>
+                              {post.category}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-2">
+                              <Calendar className="h-3 w-3" />
+                              {new Date(post.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </span>
+                          </div>
+                          <CardTitle className="text-2xl font-black tracking-tight group-hover:text-primary transition-colors leading-tight line-clamp-2">
+                            {post.title}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-8 pt-4 grow">
+                          <p className="text-slate-500 text-sm line-clamp-3 leading-relaxed font-medium">
+                            {post.content?.replace(/<[^>]*>/g, '').slice(0, 150)}...
+                          </p>
+                          <div className="mt-6 flex items-center justify-between">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                              {post.organizations?.name}
+                            </span>
+                            <div className="p-2 bg-slate-50 rounded-xl group-hover:bg-primary group-hover:text-white transition-all transform group-hover:translate-x-1">
+                              <ArrowRight className="h-4 w-4" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </a>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="col-span-full py-20 text-center">
+                  <div className="bg-slate-50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                    <BookOpen className="h-8 w-8 text-slate-300" />
                   </div>
-                  <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Belum ada konten</h3>
-                  <p className="text-slate-500 max-w-xs mx-auto text-sm font-medium mt-2">Tidak ada {activeCategory === 'semua' ? 'konten' : activeCategory} yang ditemukan untuk saat ini.</p>
-                </motion.div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Belum ada berita</h3>
+                  <p className="text-slate-500">Kembali lagi nanti untuk informasi terbaru.</p>
+                </div>
               )}
             </AnimatePresence>
-          </div>
+          </motion.div>
+
+          {/* Pagination Controls */}
+          {!loading && totalPosts > postsPerPage && (
+            <div className="mt-16 flex justify-center items-center gap-4">
+              <Button
+                variant="outline"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                className="rounded-2xl px-6 h-12 font-bold uppercase tracking-widest bg-white border-2 hover:bg-slate-50 disabled:opacity-30 transition-all"
+              >
+                Sebelumnya
+              </Button>
+              
+              <div className="flex items-center gap-2">
+                {Array.from({ length: Math.ceil(totalPosts / postsPerPage) }).map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`w-10 h-10 rounded-xl font-black transition-all ${
+                      currentPage === i + 1 
+                        ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' 
+                        : 'bg-white border-2 text-slate-400 hover:border-primary/50 hover:text-primary'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+
+              <Button
+                variant="outline"
+                disabled={currentPage >= Math.ceil(totalPosts / postsPerPage)}
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                className="rounded-2xl px-6 h-12 font-bold uppercase tracking-widest bg-white border-2 hover:bg-slate-50 disabled:opacity-30 transition-all"
+              >
+                Selanjutnya
+              </Button>
+            </div>
+          )}
         </section>
       </div>
     </main>

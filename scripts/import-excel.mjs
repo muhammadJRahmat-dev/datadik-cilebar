@@ -1,3 +1,24 @@
+/**
+ * SCRIPT IMPORT DATA SEKOLAH DARI EXCEL
+ * 
+ * Cara Penggunaan:
+ * 1. Pastikan file .env.local berisi NEXT_PUBLIC_SUPABASE_URL dan SUPABASE_SERVICE_ROLE_KEY
+ * 2. Jalankan perintah:
+ *    node scripts/import-excel.mjs path/to/your/file.xlsx [SheetName]
+ * 
+ * Mapping Kolom (Case Insensitive):
+ * - Nama Sekolah: 'nama sekolah', 'sekolah', 'nama'
+ * - NPSN: 'npsn'
+ * - Jenis/Jenjang: 'jenjang', 'jenis', 'tingkat'
+ * - Status: 'status'
+ * - Alamat: 'alamat', 'address'
+ * - Siswa: 'siswa', 'jumlah siswa', 'jml siswa'
+ * - Guru: 'guru', 'jumlah guru', 'jml guru'
+ * - Rombel: 'rombel', 'jumlah rombel'
+ * - Koordinat: 'lat', 'lng'
+ * - Kontak: 'wa', 'email'
+ */
+
 import xlsx from 'xlsx'
 import { createClient } from '@supabase/supabase-js'
 
@@ -88,6 +109,15 @@ async function main() {
       lng: lng ?? null,
       jml_siswa: siswa ?? 0,
       jml_guru: guru ?? 0,
+      stats: {
+        jenis: jenis || null,
+        status: status || null,
+        rombel: rombel ?? null,
+        kontak_wa: wa || null,
+        kontak_email: email || null,
+        lat: lat ?? null,
+        lng: lng ?? null
+      },
       dynamic_info: {
         jenis: jenis || null,
         status: status || null,

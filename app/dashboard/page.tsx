@@ -28,6 +28,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const KNOWN_KEYS = ['siswa', 'guru', 'pegawai', 'rombel', 'jenis', 'status', 'visi', 'misi', 'kontak_wa', 'kontak_email', 'last_sync', 'lat', 'lng', 'address'];
@@ -70,6 +71,17 @@ export default function DashboardPage() {
     is_published: true
   });
   const [isSavingPost, setIsSavingPost] = useState(false);
+
+  // Submission States
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [isSubmissionModalOpen, setIsSubmissionModalOpen] = useState(false);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [submissionFormData, setSubmissionFormData] = useState({
+    file_url: '',
+    file_name: '',
+    description: '',
+    category: 'umum'
+  });
 
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -233,6 +245,15 @@ export default function DashboardPage() {
           .order('created_at', { ascending: false });
         
         if (schoolPosts) setPosts(schoolPosts);
+
+        // Fetch Submissions
+        const { data: schoolSubmissions } = await supabase
+          .from('submissions')
+          .select('*')
+          .eq('org_id', org.id)
+          .order('created_at', { ascending: false });
+        
+        if (schoolSubmissions) setSubmissions(schoolSubmissions);
       }
 
       setLoading(false);
@@ -317,6 +338,36 @@ export default function DashboardPage() {
     router.refresh();
   };
 
+  const handleSendSubmission = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!submissionFormData.file_url) {
+      showToast('Pilih file terlebih dahulu', 'error');
+      return;
+    }
+    setIsUploadingFile(true);
+    try {
+      const { data, error } = await supabase
+        .from('submissions')
+        .insert([{ 
+          ...submissionFormData, 
+          org_id: schoolInfo.id,
+          user_id: user.id 
+        }])
+        .select();
+      
+      if (error) throw error;
+      if (data) setSubmissions([data[0], ...submissions]);
+      showToast('Berkas berhasil dikirim ke Kecamatan');
+      setIsSubmissionModalOpen(false);
+      setSubmissionFormData({ file_url: '', file_name: '', description: '', category: 'umum' });
+    } catch (err) {
+      console.error('Error sending submission:', err);
+      showToast('Gagal mengirim berkas', 'error');
+    } finally {
+      setIsUploadingFile(false);
+    }
+  };
+
   const handleDeletePost = async (id: string) => {
     if (confirm('Yakin ingin menghapus berita ini?')) {
       const { error } = await supabase.from('posts').delete().eq('id', id);
@@ -328,17 +379,38 @@ export default function DashboardPage() {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50/50">
-      <div className="flex flex-col items-center gap-6">
-        <div className="relative">
-          <div className="w-16 h-16 border-4 border-primary/20 rounded-full" />
-          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin absolute top-0" />
+    <div className="min-h-screen bg-slate-50/50 flex flex-col font-sans">
+      <Navbar />
+      <main className="flex-1 container mx-auto px-4 pt-28 pb-16">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
+          <div className="space-y-3">
+            <Skeleton className="h-6 w-32 rounded-xl" />
+            <Skeleton className="h-12 w-64 rounded-xl" />
+            <Skeleton className="h-4 w-48 rounded-xl" />
+          </div>
+          <Skeleton className="h-12 w-32 rounded-2xl" />
         </div>
-        <div className="flex flex-col items-center gap-1">
-          <p className="text-slate-900 font-bold text-lg">Memuat Dashboard</p>
-          <p className="text-slate-500 text-sm animate-pulse">Menghubungkan ke server...</p>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-8">
+            <Card className="border-none shadow-2xl rounded-[2.5rem] overflow-hidden bg-white">
+              <CardHeader className="p-8 border-b border-slate-50">
+                <Skeleton className="h-8 w-48 mb-2" />
+                <Skeleton className="h-4 w-64" />
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                <Skeleton className="h-24 w-full rounded-2xl" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
+                <Skeleton className="h-24 w-full rounded-2xl" />
+              </CardContent>
+            </Card>
+          </div>
+          <div className="lg:col-span-4 space-y-8">
+            <Skeleton className="h-64 w-full rounded-[2.5rem]" />
+            <Skeleton className="h-80 w-full rounded-[2.5rem]" />
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 
@@ -363,6 +435,15 @@ export default function DashboardPage() {
                 <LayoutDashboard className="h-6 w-6 text-primary" />
               </div>
               <span className="text-sm font-black uppercase tracking-widest text-primary/60">Console Operator</span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => router.push('/dashboard/settings')}
+                className="h-auto px-3 py-1.5 text-primary hover:text-primary hover:bg-primary/5 font-bold text-[10px] uppercase tracking-widest gap-2 rounded-xl border border-primary/10"
+              >
+                <Settings className="h-3 w-3" />
+                Pengaturan
+              </Button>
             </div>
             <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none mb-2">
               Dashboard <span className="text-primary">Sekolah</span>
@@ -478,6 +559,73 @@ export default function DashboardPage() {
                           </div>
                         </motion.div>
                       ))}
+                    </div>
+                  )}
+                </AnimatePresence>
+              </CardContent>
+            </Card>
+
+            {/* Submissions Card */}
+            <Card className="border-none shadow-2xl shadow-slate-200/50 overflow-hidden rounded-[2.5rem] bg-white">
+              <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-8 gap-4 border-b border-slate-50">
+                <div>
+                  <CardTitle className="text-2xl font-black tracking-tight text-slate-900">Pengiriman Berkas</CardTitle>
+                  <p className="text-slate-500 text-sm font-medium">Kirim laporan atau dokumen ke Admin Kecamatan</p>
+                </div>
+                <Button 
+                  variant="outline"
+                  className="gap-2 border-primary/20 text-primary hover:bg-primary/5 rounded-2xl h-12 px-6 transition-all active:scale-95" 
+                  onClick={() => setIsSubmissionModalOpen(true)}
+                >
+                  <Upload className="h-5 w-5" /> Kirim Berkas
+                </Button>
+              </CardHeader>
+              <CardContent className="p-0">
+                <AnimatePresence mode="popLayout">
+                  {submissions.length === 0 ? (
+                    <div className="p-12 text-center">
+                      <p className="text-slate-400 text-sm font-medium">Belum ada berkas yang dikirim</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-slate-50">
+                      {submissions.slice(0, 5).map((sub, index) => (
+                        <div key={sub.id} className="p-6 flex items-center justify-between hover:bg-slate-50/50 transition-all group">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
+                              <FileText className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <h5 className="font-bold text-slate-900 text-sm">{sub.file_name}</h5>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-md ${
+                                  sub.status === 'verified' ? 'bg-green-100 text-green-700' :
+                                  sub.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-500'
+                                }`}>
+                                  {sub.status}
+                                </span>
+                                <span className="text-[10px] text-slate-400 font-medium">
+                                  {new Date(sub.created_at).toLocaleDateString('id-ID')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <a 
+                            href={sub.file_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="p-2 rounded-lg hover:bg-primary/5 text-slate-400 hover:text-primary transition-all"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </div>
+                      ))}
+                      {submissions.length > 5 && (
+                        <div className="p-4 text-center">
+                          <Button variant="ghost" size="sm" className="text-primary font-bold text-xs uppercase tracking-wider">
+                            Lihat Semua Berkas
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </AnimatePresence>
@@ -868,6 +1016,146 @@ export default function DashboardPage() {
           </motion.div>
         </div>
       </main>
+
+      {/* Submission Modal */}
+      <AnimatePresence>
+        {isSubmissionModalOpen && (
+          <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsSubmissionModalOpen(false)}
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-lg overflow-hidden relative z-10"
+            >
+              <div className="p-8 border-b border-slate-50 flex justify-between items-center">
+                <div>
+                  <h3 className="text-2xl font-black text-slate-900">Kirim Berkas</h3>
+                  <p className="text-slate-500 text-sm font-medium">Unggah dokumen untuk Admin Kecamatan</p>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setIsSubmissionModalOpen(false)} className="rounded-2xl">
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
+              
+              <form onSubmit={handleSendSubmission} className="p-8 space-y-6">
+                <div className="space-y-4">
+                  <label className="text-sm font-bold text-slate-700 ml-1">File Dokumen (PDF/Gambar/Doc)</label>
+                  <div 
+                    className={`border-2 border-dashed rounded-[2rem] p-10 text-center transition-all ${
+                      submissionFormData.file_url ? 'border-green-200 bg-green-50' : 'border-slate-200 hover:border-primary/30 hover:bg-slate-50'
+                    }`}
+                  >
+                    {isUploadingFile ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+                        <p className="text-sm font-bold text-primary">Mengunggah file...</p>
+                      </div>
+                    ) : submissionFormData.file_url ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="bg-green-100 p-4 rounded-[1.5rem] text-green-600">
+                          <CheckCircle2 className="h-8 w-8" />
+                        </div>
+                        <p className="text-sm font-bold text-green-700">{submissionFormData.file_name}</p>
+                        <Button 
+                          type="button" 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setSubmissionFormData({ ...submissionFormData, file_url: '', file_name: '' })}
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50 font-bold"
+                        >
+                          Ganti File
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="bg-slate-100 p-5 rounded-[1.5rem] text-slate-400">
+                          <Upload className="h-10 w-10" />
+                        </div>
+                        <div>
+                          <p className="text-slate-900 font-bold">Pilih file atau tarik ke sini</p>
+                          <p className="text-slate-400 text-xs mt-1">Maksimal 10MB (PDF, JPG, PNG, DOCX)</p>
+                        </div>
+                        <input 
+                          type="file" 
+                          className="hidden" 
+                          id="submission-file" 
+                          onChange={async (e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setIsUploadingFile(true);
+                              const url = await handleFileUpload(file, 'submissions');
+                              if (url) {
+                                setSubmissionFormData({ ...submissionFormData, file_url: url, file_name: file.name });
+                              }
+                              setIsUploadingFile(false);
+                            }
+                          }}
+                        />
+                        <Button 
+                          type="button" 
+                          onClick={() => document.getElementById('submission-file')?.click()}
+                          className="bg-white text-slate-900 border border-slate-200 hover:bg-slate-50 rounded-xl px-6 h-10 shadow-sm"
+                        >
+                          Pilih File
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 ml-1">Kategori</label>
+                  <select 
+                    value={submissionFormData.category}
+                    onChange={(e) => setSubmissionFormData({ ...submissionFormData, category: e.target.value })}
+                    className="w-full bg-slate-50 border-none rounded-2xl h-12 px-4 text-slate-900 font-medium focus:ring-2 focus:ring-primary/20 transition-all"
+                  >
+                    <option value="umum">Umum</option>
+                    <option value="laporan">Laporan Bulanan</option>
+                    <option value="arsip">Arsip Sekolah</option>
+                    <option value="pengajuan">Pengajuan Dana/Sarpras</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-slate-700 ml-1">Keterangan (Opsional)</label>
+                  <textarea 
+                    value={submissionFormData.description}
+                    onChange={(e) => setSubmissionFormData({ ...submissionFormData, description: e.target.value })}
+                    placeholder="Tambahkan catatan singkat..."
+                    className="w-full bg-slate-50 border-none rounded-[1.5rem] p-4 text-slate-900 font-medium focus:ring-2 focus:ring-primary/20 transition-all min-h-25"
+                  />
+                </div>
+
+                <div className="flex gap-4 pt-4">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    onClick={() => setIsSubmissionModalOpen(false)}
+                    className="flex-1 rounded-2xl h-14 font-bold text-slate-500 hover:bg-slate-50 transition-all"
+                  >
+                    Batal
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    disabled={isUploadingFile || !submissionFormData.file_url}
+                    className="flex-1 bg-primary hover:bg-primary/90 text-white rounded-2xl h-14 font-bold shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    Kirim Sekarang
+                  </Button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Post Modal */}
       <AnimatePresence>

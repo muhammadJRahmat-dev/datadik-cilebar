@@ -31,4 +31,29 @@ export interface Post {
   image_url?: string;
   is_published: boolean;
   created_at: string;
+  organizations?: Organization;
+}
+
+export interface Profile {
+  id: string;
+  role: 'admin_kecamatan' | 'operator' | 'visitor';
+  full_name?: string;
+  npsn?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Submission {
+  id: string;
+  org_id: string;
+  user_id?: string;
+  file_url: string;
+  file_name: string;
+  file_type?: string;
+  file_size?: number;
+  description?: string;
+  category: 'umum' | 'laporan' | 'arsip' | 'pengajuan';
+  status: 'pending' | 'verified' | 'rejected';
+  created_at: string;
+  organizations?: Organization;
 }

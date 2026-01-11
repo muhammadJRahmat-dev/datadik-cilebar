@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const [org, setOrg] = useState<any>(null);
   const [schools, setSchools] = useState<any[]>([]);
   const [partners, setPartners] = useState<any[]>([]);
@@ -21,6 +22,35 @@ export default function Navbar() {
     };
     window.addEventListener('scroll', handleScroll);
     
+    // Check auth state
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data }) => {
+            if (data) setUser(data);
+          });
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single()
+          .then(({ data }) => {
+            if (data) setUser(data);
+          });
+      } else {
+        setUser(null);
+      }
+    });
+
     // Check for subdomain to fetch org branding
     const host = window.location.host;
     const mainDomain = 'datadikcilebar.my.id';
@@ -56,7 +86,10 @@ export default function Navbar() {
         });
     }
 
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      subscription.unsubscribe();
+    };
   }, []);
 
   const getHomeUrl = () => '/';
@@ -138,9 +171,15 @@ export default function Navbar() {
           </div>
           
           <div className="flex items-center gap-2 ml-4">
-            <Button variant="ghost" asChild className="font-bold uppercase tracking-wider text-(--nav-primary) hover:bg-(--nav-primary)/5">
-              <Link href="/login">Login</Link>
-            </Button>
+            {user ? (
+              <Button variant="ghost" asChild className="font-bold uppercase tracking-wider text-(--nav-primary) hover:bg-(--nav-primary)/5">
+                <Link href={user.role === 'admin_kecamatan' ? '/admin/kecamatan' : '/dashboard'}>Dashboard</Link>
+              </Button>
+            ) : (
+              <Button variant="ghost" asChild className="font-bold uppercase tracking-wider text-(--nav-primary) hover:bg-(--nav-primary)/5">
+                <Link href="/login">Login</Link>
+              </Button>
+            )}
             <Button asChild className="font-bold uppercase tracking-wider shadow-lg hover:shadow-primary/20 bg-(--nav-primary) hover:opacity-90 transition-opacity">
               <Link href="https://dapo.kemendikdasmen.go.id/progres/3/022132" target="_blank">Cek Dapodik</Link>
             </Button>
@@ -199,9 +238,15 @@ export default function Navbar() {
             )}
           </div>
           <div className="flex flex-col gap-2 mt-2">
-            <Button variant="outline" asChild className="w-full border-(--nav-primary) text-(--nav-primary) hover:bg-(--nav-primary)/5 font-bold">
-              <Link href="/login">LOGIN OPERATOR</Link>
-            </Button>
+            {user ? (
+              <Button variant="outline" asChild className="w-full border-(--nav-primary) text-(--nav-primary) hover:bg-(--nav-primary)/5 font-bold">
+                <Link href={user.role === 'admin_kecamatan' ? '/admin/kecamatan' : '/dashboard'}>DASHBOARD</Link>
+              </Button>
+            ) : (
+              <Button variant="outline" asChild className="w-full border-(--nav-primary) text-(--nav-primary) hover:bg-(--nav-primary)/5 font-bold">
+                <Link href="/login">LOGIN OPERATOR</Link>
+              </Button>
+            )}
             <Button asChild className="w-full bg-(--nav-primary) hover:opacity-90 font-bold">
               <Link href="https://dapo.kemendikdasmen.go.id/progres/3/022132" target="_blank">CEK DAPODIK</Link>
             </Button>
