@@ -317,10 +317,10 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-3xl overflow-hidden border-none shadow-2xl relative min-h-[500px] bg-slate-100">
+          <div className="rounded-3xl overflow-hidden border-none shadow-2xl relative h-[500px] bg-slate-100">
             <CilebarMap schools={filteredSchools} />
             {filteredSchools.length === 0 && !loading && (
-              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-1000">
+              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-50">
                 <div className="text-center p-8 bg-white rounded-2xl shadow-xl border">
                   <School className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
                   <p className="font-bold text-xl">Sekolah Tidak Ditemukan</p>

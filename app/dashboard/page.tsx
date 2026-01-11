@@ -600,7 +600,7 @@ export default function DashboardPage() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Alamat Sekolah</label>
                   <textarea 
-                    className="w-full min-h-[80px] p-4 text-sm font-medium rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all resize-none"
+                    className="w-full min-h-20 p-4 text-sm font-medium rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all resize-none"
                     placeholder="Alamat lengkap sekolah..."
                     value={orgData.address}
                     onChange={(e) => setOrgData({...orgData, address: e.target.value})}
@@ -679,7 +679,7 @@ export default function DashboardPage() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Visi Sekolah</label>
                   <textarea 
-                    className="w-full min-h-[100px] p-4 text-sm font-medium rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all resize-none"
+                    className="w-full min-h-24 p-4 text-sm font-medium rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all resize-none"
                     placeholder="Apa visi sekolah Anda?"
                     value={profileData.visi}
                     onChange={(e) => setProfileData({...profileData, visi: e.target.value})}
@@ -688,7 +688,7 @@ export default function DashboardPage() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Misi Sekolah</label>
                   <textarea 
-                    className="w-full min-h-[100px] p-4 text-sm font-medium rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all resize-none"
+                    className="w-full min-h-24 p-4 text-sm font-medium rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all resize-none"
                     placeholder="Sebutkan misi sekolah Anda..."
                     value={profileData.misi}
                     onChange={(e) => setProfileData({...profileData, misi: e.target.value})}

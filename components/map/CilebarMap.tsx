@@ -92,6 +92,22 @@ export default function CilebarMap({ schools }: { schools: SchoolMarker[] }) {
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || ''
   });
 
+  // Global error listener for Google Maps specific errors like ApiProjectMapError
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleGoogleMapsError = (event: any) => {
+      if (event.message?.includes('Google Maps JavaScript API error') || 
+          event.message?.includes('ApiProjectMapError')) {
+        console.warn('Google Maps API Error detected, switching to Leaflet fallback...');
+        setMapError(true);
+      }
+    };
+
+    window.addEventListener('error', handleGoogleMapsError, true);
+    return () => window.removeEventListener('error', handleGoogleMapsError, true);
+  }, []);
+
   useEffect(() => {
     if (loadError) {
       console.error('Google Maps Load Error:', loadError);

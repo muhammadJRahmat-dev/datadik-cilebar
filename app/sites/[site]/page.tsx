@@ -118,7 +118,7 @@ export default function SchoolPage() {
         
         <div className="container mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
-            <div className="w-40 h-40 bg-white rounded-3xl flex items-center justify-center shadow-[0_0_50px_rgba(0,0,0,0.3)] border-4 border-white/20 overflow-hidden transform hover:scale-105 transition-transform duration-500">
+            <div className="w-40 h-40 bg-white rounded-3xl flex items-center justify-center shadow-2xl border-4 border-white/20 overflow-hidden transform hover:scale-105 transition-transform duration-500">
               {school.logo_url ? (
                 <img src={school.logo_url} alt={school.name} className="w-full h-full object-contain p-4" />
               ) : (
