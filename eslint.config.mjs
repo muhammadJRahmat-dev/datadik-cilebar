@@ -13,6 +13,7 @@ export default [
       '.next/**',
       '.vercel/**',
       'dist/**',
+      'scripts/**',
     ],
   },
   js.configs.recommended,
