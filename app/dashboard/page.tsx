@@ -70,6 +70,31 @@ export default function DashboardPage() {
   });
   const [isSavingPost, setIsSavingPost] = useState(false);
 
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const handleSyncDapodik = async () => {
+    if (!confirm('Mulai sinkronisasi data dari Kemendikdasmen? Proses ini mungkin memakan waktu.')) return;
+    
+    setIsSyncing(true);
+    try {
+      const response = await fetch('/api/sync/kemendikdasmen');
+      const data = await response.json();
+      
+      if (data.success) {
+        showToast(`Sinkronisasi berhasil! ${data.processed} sekolah diproses.`);
+        // Refresh data
+        window.location.reload();
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (err: any) {
+      console.error('Sync error:', err);
+      showToast('Gagal sinkronisasi: ' + err.message, 'error');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
@@ -491,9 +516,16 @@ export default function DashboardPage() {
                   </div>
                   <Button 
                     variant="secondary" 
+                    onClick={handleSyncDapodik}
+                    disabled={isSyncing}
                     className="w-full bg-white text-primary hover:bg-white/90 rounded-2xl h-14 font-black uppercase tracking-widest text-xs shadow-xl shadow-black/10 transition-all active:scale-95 mt-4"
                   >
-                    Sync Dapodik
+                    {isSyncing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Syncing...
+                      </>
+                    ) : 'Sync Dapodik'}
                   </Button>
                 </div>
               </CardContent>

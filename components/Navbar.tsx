@@ -69,13 +69,13 @@ export default function Navbar() {
               <School className="h-6 w-6 text-white" />
             )}
           </div>
-          <div className="flex flex-col">
-            <span className={`font-bold text-xl tracking-tight leading-none text-[var(--nav-primary)]`}>
+          <div className="flex flex-col max-w-[150px] sm:max-w-none">
+            <span className={`font-bold text-lg sm:text-xl tracking-tight leading-none text-[var(--nav-primary)] truncate`}>
               {org?.name ? org.name.split(' ')[0] : 'DATADIK'}
             </span>
-            <span className={`text-[10px] font-bold tracking-[0.2em] uppercase leading-none ${
+            <span className={`text-[9px] sm:text-[10px] font-bold tracking-[0.1em] sm:tracking-[0.2em] uppercase leading-none mt-1 ${
               isScrolled ? 'text-muted-foreground' : 'text-[var(--nav-primary)]/70'
-            }`}>
+            } truncate`}>
               {org?.name ? org.name.split(' ').slice(1).join(' ') : 'Cilebar - Karawang'}
             </span>
           </div>
