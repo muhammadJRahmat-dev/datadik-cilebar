@@ -3,10 +3,14 @@ import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const getSupabaseAdmin = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key || url.includes('placeholder.supabase.co')) {
+    return null;
+  }
+  return createClient(url, key);
+};
 
 /**
  * SOURCE DATA:
@@ -39,6 +43,10 @@ interface SyncResult {
 }
 
 export async function GET(req: NextRequest) {
+  const supabaseAdmin = getSupabaseAdmin();
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: 'Database admin not configured' }, { status: 503 });
+  }
   try {
     // Verify API key for security (optional but recommended)
     const apiKey = req.headers.get('x-api-key');
@@ -47,13 +55,13 @@ export async function GET(req: NextRequest) {
     }
 
     console.warn('Starting advanced sync from Kemendikdasmen...');
-    
+
     const allSchools: School[] = [];
-    
+
     // Fetch school lists
     for (const url of LIST_URLS) {
       console.warn(`Fetching list from: ${url}`);
-      
+
       try {
         const { data: listHtml } = await axios.get(url, {
           headers: {
@@ -72,7 +80,7 @@ export async function GET(req: NextRequest) {
         $list('#table1 tbody tr').each((_, el) => {
           const $el = $list(el);
           const cols = $el.find('td');
-          
+
           if (cols.length >= 6) {
             const npsn = $list(cols[1]).text().trim();
             const name = $list(cols[2]).text().trim();
@@ -100,12 +108,12 @@ export async function GET(req: NextRequest) {
 
     console.warn(`Found ${allSchools.length} schools to process.`);
     const results: SyncResult[] = [];
-    
+
     // Process each school
     for (const school of allSchools) {
       try {
         console.warn(`Syncing details for: ${school.name} (${school.npsn})`);
-        
+
         const { data: detailHtml } = await axios.get(`${REFERENSI_DETAIL_URL}${school.npsn}`, {
           headers: { 'User-Agent': 'Mozilla/5.0' },
           timeout: 15000
@@ -135,7 +143,7 @@ export async function GET(req: NextRequest) {
           .maybeSingle();
 
         let orgId: string | undefined;
-        
+
         if (existingOrg) {
           orgId = existingOrg.id;
         } else {
@@ -148,7 +156,7 @@ export async function GET(req: NextRequest) {
             })
             .select()
             .single();
-          
+
           if (insertError) throw insertError;
           orgId = newOrg?.id;
         }
@@ -188,13 +196,13 @@ export async function GET(req: NextRequest) {
       } catch (err: unknown) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
         console.error(`Error syncing ${school.name}:`, errorMessage);
-        results.push({ 
-          name: school.name, 
-          npsn: school.npsn, 
-          lat: null, 
-          lng: null, 
-          status: 'error', 
-          message: errorMessage 
+        results.push({
+          name: school.name,
+          npsn: school.npsn,
+          lat: null,
+          lng: null,
+          status: 'error',
+          message: errorMessage
         });
       }
     }
@@ -210,9 +218,9 @@ export async function GET(req: NextRequest) {
   } catch (error: unknown) {
     console.error('Sync error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Terjadi kesalahan tak terduga.';
-    return NextResponse.json({ 
-      success: false, 
-      error: errorMessage 
+    return NextResponse.json({
+      success: false,
+      error: errorMessage
     }, { status: 500 });
   }
 }

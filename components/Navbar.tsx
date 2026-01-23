@@ -21,7 +21,7 @@ export default function Navbar() {
       setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
-    
+
     // Check auth state
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -55,7 +55,7 @@ export default function Navbar() {
     const host = window.location.host;
     const mainDomain = 'datadikcilebar.my.id';
     const isSubdomain = host !== mainDomain && host !== `www.${mainDomain}` && !host.includes('localhost:3000');
-    
+
     if (isSubdomain || (host.includes('localhost') && host.split('.').length > 1)) {
       const slug = host.split('.')[0];
       if (slug && slug !== 'www' && slug !== 'localhost') {
@@ -97,29 +97,28 @@ export default function Navbar() {
   const themeColor = org?.theme_color || '#2563eb';
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-      isScrolled ? 'bg-white/80 backdrop-blur-md shadow-md py-2' : 'bg-transparent py-4'
-    }`} style={{ '--nav-primary': themeColor } as any}>
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 backdrop-blur-md shadow-md py-2' : 'bg-transparent py-4'
+      }`} style={{ '--nav-primary': themeColor } as any}>
       <div className="container mx-auto px-4 flex items-center justify-between">
-        <Link 
-          href={getHomeUrl()} 
-          className="flex items-center gap-2 group"
+        <Link
+          href={getHomeUrl()}
+          className="flex items-center gap-3 group"
         >
-          <div className="bg-(--nav-primary) p-2 rounded-lg shadow-lg group-hover:scale-110 transition-transform flex items-center justify-center overflow-hidden w-10 h-10">
+          <div className="bg-(--nav-primary) p-2.5 rounded-2xl shadow-xl shadow-(--nav-primary)/20 group-hover:scale-110 transition-all duration-500 flex items-center justify-center overflow-hidden w-11 h-11 relative">
+            <div className="absolute inset-0 bg-white/20 animate-pulse pointer-events-none" />
             {org?.logo_url ? (
-              <img src={org.logo_url} alt={org.name} className="w-full h-full object-contain" />
+              <img src={org.logo_url} alt={org.name} className="w-full h-full object-contain relative z-10" />
             ) : (
-              <School className="h-6 w-6 text-white" />
+              <School className="h-6 w-6 text-white relative z-10" />
             )}
           </div>
-          <div className="flex flex-col max-w-37.5 sm:max-w-none">
-            <span className={`font-bold text-lg sm:text-xl tracking-tight leading-none text-(--nav-primary) truncate`}>
+          <div className="flex flex-col">
+            <span className={`font-black text-xl sm:text-2xl tracking-tighter leading-none text-(--nav-primary) group-hover:tracking-tight transition-all duration-500`}>
               {org?.name ? org.name.split(' ')[0] : 'DATADIK'}
             </span>
-            <span className={`text-[9px] sm:text-[10px] font-bold tracking-widest uppercase leading-none mt-1 ${
-              isScrolled ? 'text-muted-foreground' : 'text-(--nav-primary)/70'
-            } truncate`}>
-              {org?.name ? org.name.split(' ').slice(1).join(' ') : 'Cilebar - Karawang'}
+            <span className={`text-[9px] sm:text-[10px] font-black tracking-[0.3em] uppercase leading-none mt-1.5 ${isScrolled ? 'text-slate-400' : 'text-(--nav-primary)/60'
+              } truncate`}>
+              {org?.name ? org.name.split(' ').slice(1).join(' ') : 'CILEBAR - KRW'}
             </span>
           </div>
         </Link>
@@ -130,9 +129,9 @@ export default function Navbar() {
           <Link href={`${getHomeUrl()}#tentang`} className="text-sm font-bold uppercase tracking-wider hover:text-(--nav-primary) transition-colors">Tentang</Link>
           <Link href={`${getHomeUrl()}#statistik`} className="text-sm font-bold uppercase tracking-wider hover:text-(--nav-primary) transition-colors">Statistik</Link>
           <Link href={`${getHomeUrl()}#peta`} className="text-sm font-bold uppercase tracking-wider hover:text-(--nav-primary) transition-colors">Peta</Link>
-          
+
           <div className="relative">
-            <button 
+            <button
               className="text-sm font-bold uppercase tracking-wider hover:text-(--nav-primary) transition-colors inline-flex items-center gap-1"
               onClick={() => { setIsPartnersOpen(!isPartnersOpen); setIsSchoolsOpen(false); }}
             >
@@ -151,7 +150,7 @@ export default function Navbar() {
             )}
           </div>
           <div className="relative">
-            <button 
+            <button
               className="text-sm font-bold uppercase tracking-wider hover:text-(--nav-primary) transition-colors inline-flex items-center gap-1"
               onClick={() => { setIsSchoolsOpen(!isSchoolsOpen); setIsPartnersOpen(false); }}
             >
@@ -169,7 +168,7 @@ export default function Navbar() {
               </div>
             )}
           </div>
-          
+
           <div className="flex items-center gap-2 ml-4">
             {user ? (
               <Button variant="ghost" asChild className="font-bold uppercase tracking-wider text-(--nav-primary) hover:bg-(--nav-primary)/5">
@@ -187,7 +186,7 @@ export default function Navbar() {
         </div>
 
         {/* Mobile Toggle */}
-        <button 
+        <button
           className="md:hidden p-2 text-(--nav-primary)"
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
         >
@@ -202,9 +201,9 @@ export default function Navbar() {
           <Link href={`${getHomeUrl()}#tentang`} className="font-bold py-2 border-b">TENTANG</Link>
           <Link href={`${getHomeUrl()}#statistik`} className="font-bold py-2 border-b">STATISTIK</Link>
           <Link href={`${getHomeUrl()}#peta`} className="font-bold py-2 border-b">PETA</Link>
-          
+
           <div className="border-t pt-2">
-            <button 
+            <button
               className="w-full text-left font-bold py-2 flex items-center justify-between"
               onClick={() => setIsPartnersOpen(!isPartnersOpen)}
             >
@@ -221,7 +220,7 @@ export default function Navbar() {
             )}
           </div>
           <div>
-            <button 
+            <button
               className="w-full text-left font-bold py-2 flex items-center justify-between"
               onClick={() => setIsSchoolsOpen(!isSchoolsOpen)}
             >

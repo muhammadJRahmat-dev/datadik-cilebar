@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const getSupabaseAdmin = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key || url.includes('placeholder.supabase.co')) {
+    return null;
+  }
+  return createClient(url, key);
+};
 
 // Types for better type safety
 interface CreateUserRequest {
@@ -23,6 +27,10 @@ interface UpdateUserRequest {
 }
 
 export async function POST(req: NextRequest) {
+  const supabaseAdmin = getSupabaseAdmin();
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: 'Database admin not configured' }, { status: 503 });
+  }
   try {
     const { npsn, full_name, role, password }: CreateUserRequest = await req.json();
 
@@ -49,10 +57,10 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Create user in Auth
-    const email = role === 'admin_kecamatan' 
-      ? `${npsn || 'admin'}@admin.kecamatan` 
+    const email = role === 'admin_kecamatan'
+      ? `${npsn || 'admin'}@admin.kecamatan`
       : `${npsn}@datadikcilebar.id`;
-    
+
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -103,6 +111,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const supabaseAdmin = getSupabaseAdmin();
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: 'Database admin not configured' }, { status: 503 });
+  }
   try {
     const { id, npsn, full_name, role, password }: UpdateUserRequest = await req.json();
 
@@ -137,8 +149,8 @@ export async function PATCH(req: NextRequest) {
       updateData.password = password;
     }
 
-    const email = role === 'admin_kecamatan' 
-      ? `${npsn || 'admin'}@admin.kecamatan` 
+    const email = role === 'admin_kecamatan'
+      ? `${npsn || 'admin'}@admin.kecamatan`
       : `${npsn}@datadikcilebar.id`;
     updateData.email = email;
 
@@ -180,6 +192,10 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const supabaseAdmin = getSupabaseAdmin();
+  if (!supabaseAdmin) {
+    return NextResponse.json({ error: 'Database admin not configured' }, { status: 503 });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
@@ -212,6 +228,11 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function GET() {
+  const supabaseAdmin = getSupabaseAdmin();
+  if (!supabaseAdmin) {
+    // In build, we might just return empty instead of 503 to avoid build failure if statically optimized
+    return NextResponse.json([]);
+  }
   try {
     const { data, error } = await supabaseAdmin
       .from('profiles')

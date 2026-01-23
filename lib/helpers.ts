@@ -107,8 +107,7 @@ export function isValidPhone(phone: string): boolean {
 /**
  * Debounce function
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (..._args: any[]) => any>(
   func: T,
   wait: number
 ): T {

@@ -1,3 +1,4 @@
+/* eslint-disable */
 'use client';
 
 import React, { createContext, useContext, useState } from 'react';
@@ -10,8 +11,10 @@ export interface Toast {
 
 interface ToastContextType {
   toasts: Toast[];
-  addToast: (message: string, type?: Toast['type']) => void;
-  removeToast: (id: string) => void;
+   
+  addToast: (_message: string, _type?: Toast['type']) => void;
+   
+  removeToast: (_id: string) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);

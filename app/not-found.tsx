@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Home, AlertCircle } from 'lucide-react';
 
@@ -12,7 +14,7 @@ export default function NotFound() {
           <span className="font-bold text-slate-900">Datadik Cilebar</span>
         </div>
       </nav>
-      
+
       <main className="flex-1 flex items-center justify-center">
         <div className="text-center space-y-6 max-w-md">
           <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto">
@@ -24,13 +26,13 @@ export default function NotFound() {
             Maaf, halaman yang Anda cari tidak dapat ditemukan atau telah dipindahkan.
           </p>
           <div className="flex gap-4 justify-center">
-            <Link 
+            <Link
               href="/"
               className="px-6 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary/90 transition-colors"
             >
               Ke Beranda
             </Link>
-            <button 
+            <button
               onClick={() => window.history.back()}
               className="px-6 py-3 bg-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-300 transition-colors"
             >

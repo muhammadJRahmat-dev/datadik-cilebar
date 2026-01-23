@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // Use service role for security checks (bypassing RLS for brute force table)
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const getSupabaseAdmin = () => {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key || url.includes('placeholder.supabase.co')) {
+    return null;
+  }
+  return createClient(url, key);
+};
 
 // Types for better type safety
 interface LoginRequest {
@@ -14,6 +18,13 @@ interface LoginRequest {
 }
 
 export async function POST(req: NextRequest) {
+  const supabaseAdmin = getSupabaseAdmin();
+  if (!supabaseAdmin) {
+    return NextResponse.json(
+      { error: 'Layanan autentikasi belum dikonfigurasi secara lengkap.' },
+      { status: 503 }
+    );
+  }
   try {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     if (
@@ -29,7 +40,7 @@ export async function POST(req: NextRequest) {
     }
 
     const { npsn, password }: LoginRequest = await req.json();
-    
+
     // Input validation
     if (!npsn || !password) {
       return NextResponse.json(
@@ -64,8 +75,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (recentAttempts && recentAttempts.length >= 5) {
-      return NextResponse.json({ 
-        error: 'Akun terkunci sementara karena terlalu banyak percobaan. Silakan coba lagi dalam 15 menit.' 
+      return NextResponse.json({
+        error: 'Akun terkunci sementara karena terlalu banyak percobaan. Silakan coba lagi dalam 15 menit.'
       }, { status: 429 });
     }
 
