@@ -7,6 +7,12 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Types for better type safety
+interface LoginRequest {
+  npsn: string;
+  password: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -21,16 +27,41 @@ export async function POST(req: NextRequest) {
         { status: 503 }
       );
     }
-    const { npsn, password } = await req.json();
-    const ip = req.headers.get('x-forwarded-for') || 'unknown';
+
+    const { npsn, password }: LoginRequest = await req.json();
+    
+    // Input validation
+    if (!npsn || !password) {
+      return NextResponse.json(
+        { error: 'NPSN dan Password harus diisi.' },
+        { status: 400 }
+      );
+    }
+
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password minimal 6 karakter.' },
+        { status: 400 }
+      );
+    }
+
+    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
 
     // 1. Check Brute Force (Max 5 attempts in 15 mins)
-    const { data: recentAttempts } = await supabaseAdmin
+    const { data: recentAttempts, error: attemptError } = await supabaseAdmin
       .from('login_attempts')
       .select('id')
       .eq('npsn', npsn)
       .eq('is_successful', false)
       .gt('attempted_at', new Date(Date.now() - 15 * 60 * 1000).toISOString());
+
+    if (attemptError) {
+      console.error('Error checking login attempts:', attemptError);
+      return NextResponse.json(
+        { error: 'Terjadi kesalahan sistem.' },
+        { status: 500 }
+      );
+    }
 
     if (recentAttempts && recentAttempts.length >= 5) {
       return NextResponse.json({ 
@@ -42,7 +73,6 @@ export async function POST(req: NextRequest) {
     const email = `${npsn}@datadikcilebar.id`;
 
     // 3. Attempt Login
-    // We use the regular client here but we'll log the attempt with admin
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -53,7 +83,7 @@ export async function POST(req: NextRequest) {
       password,
     });
 
-    // 4. Log the attempt
+    // 4. Log attempt
     await supabaseAdmin.from('login_attempts').insert({
       npsn,
       ip_address: ip,
@@ -61,12 +91,20 @@ export async function POST(req: NextRequest) {
     });
 
     if (authError) {
-      return NextResponse.json({ error: 'NPSN atau Password salah.' }, { status: 401 });
+      // Log specific auth errors for monitoring
+      if (authError.message.includes('Invalid login credentials')) {
+        return NextResponse.json({ error: 'NPSN atau Password salah.' }, { status: 401 });
+      }
+      return NextResponse.json({ error: authError.message }, { status: 401 });
     }
 
     return NextResponse.json({ success: true, session: data.session });
 
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    console.error('Login error:', error);
+    return NextResponse.json(
+      { error: 'Terjadi kesalahan tak terduga. Silakan coba lagi.' },
+      { status: 500 }
+    );
   }
 }

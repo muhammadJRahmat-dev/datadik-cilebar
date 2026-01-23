@@ -2,13 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
-  Building2, 
   Search, 
   ExternalLink, 
-  MapPin, 
-  Users as UsersIcon,
   Plus,
   Edit,
   Trash2,
@@ -17,7 +14,6 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  Image as ImageIcon,
   ShieldCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

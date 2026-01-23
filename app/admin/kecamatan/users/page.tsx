@@ -2,12 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { 
-  Users, 
   Plus, 
   Search, 
-  MoreVertical, 
   Trash2, 
   Key, 
   Shield, 

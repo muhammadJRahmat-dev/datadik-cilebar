@@ -1,3 +1,4 @@
+import ErrorBoundary from '@/components/ErrorBoundary';
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -14,12 +15,23 @@ export const metadata: Metadata = {
   authors: [{ name: "Datadik Cilebar Team" }],
   icons: {
     icon: "/favicon.ico",
-  }
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title: "Datadik Cilebar - Portal Data Pendidikan",
+    description: "Sistem informasi terpadu untuk pemetaan, monitoring, dan transparansi data pendidikan di Kecamatan Cilebar",
+    type: "website",
+    locale: "id_ID",
+  },
 };
 
 export const viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({
@@ -28,8 +40,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
-    </html>
+    <ErrorBoundary>
+      <html lang="id">
+        <head>
+          <meta name="theme-color" content="#2563eb" />
+        </head>
+        <body className={inter.className}>{children}</body>
+      </html>
+    </ErrorBoundary>
   );
 }

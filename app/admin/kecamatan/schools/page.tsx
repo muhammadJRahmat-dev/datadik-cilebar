@@ -2,12 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   Building2, 
   Search, 
   ExternalLink, 
-  MapPin, 
   Users as UsersIcon,
   GraduationCap,
   Plus,
@@ -18,7 +17,6 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  Image as ImageIcon,
   RefreshCw,
   Download
 } from 'lucide-react';
@@ -27,7 +25,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Organization } from '@/types';
 
 export default function SchoolsManagementPage() {
   const [schools, setSchools] = useState<any[]>([]);

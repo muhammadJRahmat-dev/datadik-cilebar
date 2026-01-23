@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   Files, 
   Search, 
@@ -11,10 +11,7 @@ import {
   CheckCircle, 
   XCircle, 
   Clock, 
-  Filter,
   FileIcon,
-  MoreVertical,
-  ExternalLink,
   School,
   Trash2
 } from 'lucide-react';
@@ -31,16 +28,12 @@ export default function FileManagerPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
 
-  useEffect(() => {
-    fetchSubmissions();
-  }, []);
-
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const fetchSubmissions = async () => {
+  const fetchSubmissions = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('submissions')
@@ -54,7 +47,11 @@ export default function FileManagerPage() {
       setSubmissions(data || []);
     }
     setLoading(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchSubmissions();
+  }, [fetchSubmissions]);
 
   const handleUpdateStatus = async (id: string, status: 'verified' | 'rejected') => {
     const { error } = await supabase

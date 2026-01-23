@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { 
@@ -17,7 +17,7 @@ import {
   Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 
 const menuItems = [
@@ -35,13 +35,8 @@ export default function AdminKecamatanLayout({ children }: { children: React.Rea
   const pathname = usePathname();
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [user, setUser] = useState<any>(null);
 
-  useEffect(() => {
-    checkAdmin();
-  }, []);
-
-  const checkAdmin = async () => {
+  const checkAdmin = useCallback(async () => {
     const { data: { session } } = await supabase.auth.getSession();
     
     if (!session) {
@@ -57,16 +52,19 @@ export default function AdminKecamatanLayout({ children }: { children: React.Rea
       .single();
 
     if (error || profile?.role !== 'admin_kecamatan') {
-      // If no profile yet, check if it's the first time or bypass for dev if needed
+      // If no profile yet, check if it's first time or bypass for dev if needed
       // For now, let's redirect if not admin
       console.error('Not authorized as admin kecamatan');
       router.push('/dashboard'); // Fallback to school dashboard
       return;
     }
 
-    setUser(session.user);
     setLoading(false);
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkAdmin();
+  }, [checkAdmin]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { 
   FileText, 
   Plus, 
@@ -15,7 +15,6 @@ import {
   Loader2,
   CheckCircle2,
   AlertCircle,
-  MoreVertical,
   X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

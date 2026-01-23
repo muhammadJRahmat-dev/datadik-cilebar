@@ -4,14 +4,14 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { School, Users, GraduationCap, MapPin, Calendar, BookOpen, Loader2, Globe, ShieldCheck, Award, Phone, Mail } from 'lucide-react';
+import { School, Users, GraduationCap, MapPin, Calendar, BookOpen, Globe, ShieldCheck, Award, Phone, Mail } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import dynamic from 'next/dynamic';
 
 import { Skeleton } from '@/components/ui/skeleton';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 const CilebarMap = dynamic(() => import('@/components/map/CilebarMap'), { 
   ssr: false,

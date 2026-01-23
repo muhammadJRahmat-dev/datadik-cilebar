@@ -588,7 +588,7 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     <div className="divide-y divide-slate-50">
-                      {submissions.slice(0, 5).map((sub, index) => (
+                      {submissions.slice(0, 5).map((sub) => (
                         <div key={sub.id} className="p-6 flex items-center justify-between hover:bg-slate-50/50 transition-all group">
                           <div className="flex items-center gap-4">
                             <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">

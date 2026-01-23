@@ -6,12 +6,52 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Types for better type safety
+interface CreateUserRequest {
+  npsn?: string;
+  full_name: string;
+  role: 'admin_kecamatan' | 'operator';
+  password: string;
+}
+
+interface UpdateUserRequest {
+  id: string;
+  npsn?: string;
+  full_name: string;
+  role: 'admin_kecamatan' | 'operator';
+  password?: string;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { npsn, full_name, role, password } = await req.json();
+    const { npsn, full_name, role, password }: CreateUserRequest = await req.json();
+
+    // Input validation
+    if (!full_name || !role || !password) {
+      return NextResponse.json(
+        { error: 'Nama lengkap, role, dan password harus diisi.' },
+        { status: 400 }
+      );
+    }
+
+    if (password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password minimal 6 karakter.' },
+        { status: 400 }
+      );
+    }
+
+    if (role === 'operator' && !npsn) {
+      return NextResponse.json(
+        { error: 'NPSN wajib diisi untuk operator.' },
+        { status: 400 }
+      );
+    }
 
     // 1. Create user in Auth
-    const email = role === 'admin_kecamatan' ? `${npsn || 'admin'}@admin.kecamatan` : `${npsn}@datadikcilebar.id`;
+    const email = role === 'admin_kecamatan' 
+      ? `${npsn || 'admin'}@admin.kecamatan` 
+      : `${npsn}@datadikcilebar.id`;
     
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -20,7 +60,20 @@ export async function POST(req: NextRequest) {
       user_metadata: { npsn, full_name, role }
     });
 
-    if (authError) throw authError;
+    if (authError) {
+      console.error('Auth create user error:', authError);
+      return NextResponse.json(
+        { error: authError.message || 'Gagal membuat user autentikasi.' },
+        { status: 400 }
+      );
+    }
+
+    if (!authData.user) {
+      return NextResponse.json(
+        { error: 'Gagal membuat user autentikasi.' },
+        { status: 500 }
+      );
+    }
 
     // 2. Create profile in public schema
     const { error: profileError } = await supabaseAdmin
@@ -32,23 +85,51 @@ export async function POST(req: NextRequest) {
         npsn: role === 'operator' ? npsn : null
       });
 
-    if (profileError) throw profileError;
+    if (profileError) {
+      console.error('Profile create error:', profileError);
+      return NextResponse.json(
+        { error: 'Gagal membuat profile user.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ success: true, user: authData.user });
-  } catch (err: any) {
+
+  } catch (err: unknown) {
     console.error('Admin create user error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Terjadi kesalahan tak terduga.';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function PATCH(req: NextRequest) {
   try {
-    const { id, npsn, full_name, role, password } = await req.json();
+    const { id, npsn, full_name, role, password }: UpdateUserRequest = await req.json();
 
-    if (!id) throw new Error('ID required');
+    // Input validation
+    if (!id || !full_name || !role) {
+      return NextResponse.json(
+        { error: 'ID, nama lengkap, dan role harus diisi.' },
+        { status: 400 }
+      );
+    }
 
-    // 1. Update user in Auth if password or email changes
-    const updateData: any = {
+    if (role === 'operator' && !npsn) {
+      return NextResponse.json(
+        { error: 'NPSN wajib diisi untuk operator.' },
+        { status: 400 }
+      );
+    }
+
+    if (password && password.length < 6) {
+      return NextResponse.json(
+        { error: 'Password minimal 6 karakter.' },
+        { status: 400 }
+      );
+    }
+
+    // 1. Update user in Auth
+    const updateData: Record<string, any> = {
       user_metadata: { npsn, full_name, role }
     };
 
@@ -56,12 +137,20 @@ export async function PATCH(req: NextRequest) {
       updateData.password = password;
     }
 
-    // Determine email based on role and NPSN if it changed
-    const email = role === 'admin_kecamatan' ? `${npsn || 'admin'}@admin.kecamatan` : `${npsn}@datadikcilebar.id`;
+    const email = role === 'admin_kecamatan' 
+      ? `${npsn || 'admin'}@admin.kecamatan` 
+      : `${npsn}@datadikcilebar.id`;
     updateData.email = email;
 
     const { error: authError } = await supabaseAdmin.auth.admin.updateUserById(id, updateData);
-    if (authError) throw authError;
+
+    if (authError) {
+      console.error('Auth update user error:', authError);
+      return NextResponse.json(
+        { error: authError.message || 'Gagal mengupdate user autentikasi.' },
+        { status: 400 }
+      );
+    }
 
     // 2. Update profile in public schema
     const { error: profileError } = await supabaseAdmin
@@ -73,12 +162,20 @@ export async function PATCH(req: NextRequest) {
       })
       .eq('id', id);
 
-    if (profileError) throw profileError;
+    if (profileError) {
+      console.error('Profile update error:', profileError);
+      return NextResponse.json(
+        { error: 'Gagal mengupdate profile user.' },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+
+  } catch (err: unknown) {
     console.error('Admin update user error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Terjadi kesalahan tak terduga.';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -87,31 +184,53 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');
 
-    if (!id) throw new Error('ID required');
+    if (!id) {
+      return NextResponse.json(
+        { error: 'ID user diperlukan.' },
+        { status: 400 }
+      );
+    }
 
-    // Delete from Auth (cascades to profiles if configured, but let's be safe)
+    // Delete from Auth (cascades to profiles if configured)
     const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(id);
-    if (authError) throw authError;
+
+    if (authError) {
+      console.error('Auth delete user error:', authError);
+      return NextResponse.json(
+        { error: authError.message || 'Gagal menghapus user autentikasi.' },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
+
+  } catch (err: unknown) {
     console.error('Admin delete user error:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    const message = err instanceof Error ? err.message : 'Terjadi kesalahan tak terduga.';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function GET() {
-  // We can fetch profiles directly via client Supabase if RLS allows, 
-  // but for admin stuff, sometimes service role is easier.
   try {
     const { data, error } = await supabaseAdmin
       .from('profiles')
       .select('*')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
-    return NextResponse.json(data);
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    if (error) {
+      console.error('Get users error:', error);
+      return NextResponse.json(
+        { error: 'Gagal mengambil data users.' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json(data || []);
+
+  } catch (err: unknown) {
+    console.error('Get users error:', err);
+    const message = err instanceof Error ? err.message : 'Terjadi kesalahan tak terduga.';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
