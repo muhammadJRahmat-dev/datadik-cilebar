@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
-const CilebarMap = dynamic(() => import('@/components/map/CilebarMap'), { 
+const CilebarMap = dynamic(() => import('@/components/map/CilebarMap'), {
   ssr: false,
   loading: () => <Skeleton className="h-125 w-full rounded-3xl" />
 });
@@ -188,18 +188,18 @@ export default function HomePage() {
 
   useEffect(() => {
     let result = schools;
-    
+
     if (searchQuery) {
-      result = result.filter(s => 
+      result = result.filter(s =>
         s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.npsn?.includes(searchQuery)
       );
     }
-    
+
     if (selectedType !== 'Semua') {
       result = result.filter(s => s.jenis === selectedType);
     }
-    
+
     setFilteredSchools(result);
   }, [searchQuery, selectedType, schools]);
 
@@ -232,13 +232,13 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
-      
+
       <main className="grow pt-16">
         {/* Hero Section */}
         <section id="tentang" className="relative py-24 md:py-32 overflow-hidden bg-white border-b">
           <div className="absolute inset-0 bg-grid-slate-200 mask-[linear-gradient(180deg,white,transparent)]" />
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.05),transparent_70%)]" />
-          
+
           <div className="container mx-auto px-4 relative z-10 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/5 text-primary text-[10px] font-black uppercase tracking-[0.2em] mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
               <span className="relative flex h-2 w-2">
@@ -270,7 +270,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 py-16">
           {/* Stats Grid */}
           <section id="statistik" className="mb-24">
-            <motion.div 
+            <motion.div
               variants={containerVariants}
               initial="hidden"
               whileInView="visible"
@@ -296,7 +296,7 @@ export default function HomePage() {
                   </CardContent>
                 </Card>
               </motion.div>
-              
+
               <motion.div variants={itemVariants}>
                 <Card className="overflow-hidden border-none shadow-2xl bg-white group hover:scale-[1.05] transition-all duration-500 rounded-3xl relative">
                   <div className="absolute top-0 left-0 w-1 h-full bg-blue-600" />
@@ -316,7 +316,7 @@ export default function HomePage() {
                   </CardContent>
                 </Card>
               </motion.div>
-              
+
               <motion.div variants={itemVariants}>
                 <Card className="overflow-hidden border-none shadow-2xl bg-white group hover:scale-[1.05] transition-all duration-500 rounded-3xl relative">
                   <div className="absolute top-0 left-0 w-1 h-full bg-indigo-600" />
@@ -359,7 +359,7 @@ export default function HomePage() {
                           <span className="text-2xl font-black tracking-tighter">{item.count} <span className="text-[10px] text-slate-500 uppercase tracking-widest">Unit</span></span>
                         </div>
                         <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                          <div 
+                          <div
                             className="h-full bg-primary shadow-[0_0_20px_rgba(59,130,246,0.5)] transition-all duration-1000 ease-out"
                             style={{ width: `${(item.count / stats.totalSchools) * 100}%` }}
                           />
@@ -372,262 +372,258 @@ export default function HomePage() {
             )}
           </section>
 
-        {/* Map Section */}
-        <section id="peta" className="mb-16">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-            <div className="flex items-center gap-2">
-              <MapIcon className="h-6 w-6 text-primary" />
-              <h2 className="text-3xl font-bold tracking-tight">Peta Sebaran Sekolah</h2>
-            </div>
-            
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="relative group">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                <input 
-                  type="text" 
-                  placeholder="Cari nama sekolah atau NPSN..." 
-                  className="pl-10 pr-4 py-2 rounded-full border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary w-full sm:w-75 transition-all"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+          {/* Map Section */}
+          <section id="peta" className="mb-16">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
+              <div className="flex items-center gap-2">
+                <MapIcon className="h-6 w-6 text-primary" />
+                <h2 className="text-3xl font-bold tracking-tight">Peta Sebaran Sekolah</h2>
               </div>
-              
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
-                <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
-                {schoolTypes.map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => setSelectedType(type)}
-                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all shrink-0 ${
-                      selectedType === type 
-                        ? 'bg-primary text-primary-foreground shadow-md' 
-                        : 'bg-white border text-muted-foreground hover:border-primary hover:text-primary'
-                    }`}
-                  >
-                    {type}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
 
-          <div className="rounded-3xl overflow-hidden border-none shadow-2xl relative h-125 bg-slate-100">
-            <CilebarMap schools={filteredSchools} />
-            {filteredSchools.length === 0 && !loading && (
-              <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-50">
-                <div className="text-center p-8 bg-white rounded-2xl shadow-xl border">
-                  <School className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-                  <p className="font-bold text-xl">Sekolah Tidak Ditemukan</p>
-                  <p className="text-muted-foreground">Coba ubah kata kunci atau filter pencarian Anda.</p>
-                  <Button 
-                    variant="link" 
-                    onClick={() => {setSearchQuery(''); setSelectedType('Semua');}}
-                    className="mt-2"
-                  >
-                    Reset Pencarian
-                  </Button>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <div className="relative group">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <input
+                    type="text"
+                    placeholder="Cari nama sekolah atau NPSN..."
+                    className="pl-10 pr-4 py-2 rounded-full border bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary w-full sm:w-75 transition-all"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 sm:pb-0 scrollbar-hide">
+                  <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
+                  {schoolTypes.map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => setSelectedType(type)}
+                      className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all shrink-0 ${selectedType === type
+                        ? 'bg-primary text-primary-foreground shadow-md'
+                        : 'bg-white border text-muted-foreground hover:border-primary hover:text-primary'
+                        }`}
+                    >
+                      {type}
+                    </button>
+                  ))}
                 </div>
               </div>
-            )}
-          </div>
-          
-          <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
-            <p>Menampilkan <strong>{filteredSchools.length}</strong> dari <strong>{schools.length}</strong> sekolah</p>
-            {selectedType !== 'Semua' && (
-              <p>Filter: <span className="text-primary font-bold">{selectedType}</span></p>
-            )}
-          </div>
-        </section>
-
-        {/* Partners Section */}
-        {partners.length > 0 && (
-          <section id="mitra" className="mb-24 py-16 bg-slate-50 rounded-[3rem] border border-slate-100 overflow-hidden relative">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            <div className="container mx-auto px-8 relative z-10">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl font-black tracking-tight uppercase mb-2">Organisasi Mitra</h2>
-                <p className="text-slate-500 font-medium">Berkolaborasi untuk memajukan pendidikan di Cilebar</p>
-              </div>
-              
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
-                {partners.map((partner) => (
-                  <motion.a
-                    key={partner.id}
-                    href={`/sites/${partner.slug}`}
-                    whileHover={{ scale: 1.05 }}
-                    className="flex flex-col items-center group"
-                  >
-                    <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center shadow-xl border border-slate-100 mb-4 group-hover:border-primary/50 transition-colors p-4">
-                      {partner.logo_url ? (
-                        <img src={partner.logo_url} alt={partner.name} className="w-full h-full object-contain" />
-                      ) : (
-                        <Users className="h-10 w-10 text-slate-300 group-hover:text-primary transition-colors" />
-                      )}
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-900 transition-colors text-center">
-                      {partner.name}
-                    </span>
-                  </motion.a>
-                ))}
-              </div>
             </div>
-          </section>
-        )}
 
-        {/* Latest News Aggregator */}
-        <section id="berita" className="mb-24">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-primary/10 rounded-2xl text-primary">
-                <BookOpen className="h-6 w-6" />
-              </div>
-              <div>
-                <h2 className="text-3xl font-black tracking-tight uppercase leading-none">Berita Terkini</h2>
-                <p className="text-sm text-slate-500 font-medium mt-1">Update terbaru dari seluruh sekolah di Cilebar</p>
-              </div>
-            </div>
-            
-            <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 rounded-[1.5rem] w-fit">
-              {['semua', 'berita', 'pengumuman', 'agenda'].map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${
-                    activeCategory === cat 
-                      ? 'bg-white text-primary shadow-xl shadow-slate-200/50' 
-                      : 'text-slate-400 hover:text-slate-600'
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <motion.div 
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            <AnimatePresence mode="popLayout">
-              {loading ? (
-                // Skeleton loading for news
-                Array.from({ length: 6 }).map((_, i) => (
-                  <motion.div key={`skeleton-${i}`} variants={itemVariants}>
-                    <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white h-full">
-                      <div className="p-8 pb-0">
-                        <Skeleton className="h-4 w-20 mb-4 rounded-xl" />
-                        <Skeleton className="h-8 w-full mb-4 rounded-xl" />
-                        <Skeleton className="h-4 w-1/2 rounded-xl" />
-                      </div>
-                      <CardContent className="p-8 pt-4 grow">
-                        <Skeleton className="h-4 w-full mb-2 rounded-xl" />
-                        <Skeleton className="h-4 w-full mb-2 rounded-xl" />
-                        <Skeleton className="h-4 w-2/3 rounded-xl" />
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))
-              ) : latestPosts.length > 0 ? (
-                latestPosts.map((post) => (
-                  <motion.div
-                    layout
-                    key={post.id}
-                    variants={itemVariants}
-                  >
-                    <a href={`/posts/${post.slug}`} className="block h-full">
-                      <Card className="group border-none shadow-xl hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] overflow-hidden bg-white flex flex-col h-full cursor-pointer">
-                        <CardHeader className="p-8 pb-0">
-                          <div className="flex justify-between items-start mb-4">
-                            <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${
-                              post.category === 'pengumuman' ? 'bg-amber-100 text-amber-600' : 
-                              post.category === 'agenda' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
-                            }`}>
-                              {post.category}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-2">
-                              <Calendar className="h-3 w-3" />
-                              {new Date(post.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                            </span>
-                          </div>
-                          <CardTitle className="text-2xl font-black tracking-tight group-hover:text-primary transition-colors leading-tight line-clamp-2">
-                            {post.title}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-8 pt-4 grow">
-                          <p className="text-slate-500 text-sm line-clamp-3 leading-relaxed font-medium">
-                            {post.content?.replace(/<[^>]*>/g, '').slice(0, 150)}...
-                          </p>
-                          <div className="mt-6 flex items-center justify-between">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
-                              {post.organizations?.name}
-                            </span>
-                            <div className="p-2 bg-slate-50 rounded-xl group-hover:bg-primary group-hover:text-white transition-all transform group-hover:translate-x-1">
-                              <ArrowRight className="h-4 w-4" />
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </a>
-                  </motion.div>
-                ))
-              ) : (
-                <div className="col-span-full py-20 text-center">
-                  <div className="bg-slate-50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                    <BookOpen className="h-8 w-8 text-slate-300" />
+            <div className="rounded-3xl overflow-hidden border-none shadow-2xl relative h-125 bg-slate-100">
+              <CilebarMap schools={filteredSchools} />
+              {filteredSchools.length === 0 && !loading && (
+                <div className="absolute inset-0 bg-white/60 backdrop-blur-sm flex items-center justify-center z-50">
+                  <div className="text-center p-8 bg-white rounded-2xl shadow-xl border">
+                    <School className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-20" />
+                    <p className="font-bold text-xl">Sekolah Tidak Ditemukan</p>
+                    <p className="text-muted-foreground">Coba ubah kata kunci atau filter pencarian Anda.</p>
+                    <Button
+                      variant="link"
+                      onClick={() => { setSearchQuery(''); setSelectedType('Semua'); }}
+                      className="mt-2"
+                    >
+                      Reset Pencarian
+                    </Button>
                   </div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-2">Belum ada berita</h3>
-                  <p className="text-slate-500">Kembali lagi nanti untuk informasi terbaru.</p>
                 </div>
               )}
-            </AnimatePresence>
-          </motion.div>
+            </div>
 
-          {/* Pagination Controls */}
-          {!loading && totalPosts > postsPerPage && (
-            <div className="mt-16 flex justify-center items-center gap-4">
-              <Button
-                variant="outline"
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                className="rounded-2xl px-6 h-12 font-bold uppercase tracking-widest bg-white border-2 hover:bg-slate-50 disabled:opacity-30 transition-all"
-              >
-                Sebelumnya
-              </Button>
-              
-              <div className="flex items-center gap-2">
-                {Array.from({ length: Math.ceil(totalPosts / postsPerPage) }).map((_, i) => (
+            <div className="mt-4 flex items-center justify-between text-sm text-muted-foreground">
+              <p>Menampilkan <strong>{filteredSchools.length}</strong> dari <strong>{schools.length}</strong> sekolah</p>
+              {selectedType !== 'Semua' && (
+                <p>Filter: <span className="text-primary font-bold">{selectedType}</span></p>
+              )}
+            </div>
+          </section>
+
+          {/* Partners Section */}
+          {partners.length > 0 && (
+            <section id="mitra" className="mb-24 py-16 bg-slate-50 rounded-[3rem] border border-slate-100 overflow-hidden relative">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <div className="container mx-auto px-8 relative z-10">
+                <div className="text-center mb-12">
+                  <h2 className="text-3xl font-black tracking-tight uppercase mb-2">Organisasi Mitra</h2>
+                  <p className="text-slate-500 font-medium">Berkolaborasi untuk memajukan pendidikan di Cilebar</p>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8">
+                  {partners.map((partner) => (
+                    <motion.a
+                      key={partner.id}
+                      href={`/sites/${partner.slug}`}
+                      whileHover={{ scale: 1.05 }}
+                      className="flex flex-col items-center group"
+                    >
+                      <div className="w-24 h-24 bg-white rounded-3xl flex items-center justify-center shadow-xl border border-slate-100 mb-4 group-hover:border-primary/50 transition-colors p-4">
+                        {partner.logo_url ? (
+                          <img src={partner.logo_url} alt={partner.name} className="w-full h-full object-contain" />
+                        ) : (
+                          <Users className="h-10 w-10 text-slate-300 group-hover:text-primary transition-colors" />
+                        )}
+                      </div>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 group-hover:text-slate-900 transition-colors text-center">
+                        {partner.name}
+                      </span>
+                    </motion.a>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Latest News Aggregator */}
+          <section id="berita" className="mb-24">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-primary/10 rounded-2xl text-primary">
+                  <BookOpen className="h-6 w-6" />
+                </div>
+                <div>
+                  <h2 className="text-3xl font-black tracking-tight uppercase leading-none">Berita Terkini</h2>
+                  <p className="text-sm text-slate-500 font-medium mt-1">Update terbaru dari seluruh sekolah di Cilebar</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-2 p-1.5 bg-slate-100 rounded-[1.5rem] w-fit">
+                {['semua', 'berita', 'pengumuman', 'agenda'].map((cat) => (
                   <button
-                    key={i}
-                    onClick={() => setCurrentPage(i + 1)}
-                    className={`w-10 h-10 rounded-xl font-black transition-all ${
-                      currentPage === i + 1 
-                        ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110' 
-                        : 'bg-white border-2 text-slate-400 hover:border-primary/50 hover:text-primary'
-                    }`}
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all ${activeCategory === cat
+                      ? 'bg-white text-primary shadow-xl shadow-slate-200/50'
+                      : 'text-slate-400 hover:text-slate-600'
+                      }`}
                   >
-                    {i + 1}
+                    {cat}
                   </button>
                 ))}
               </div>
-
-              <Button
-                variant="outline"
-                disabled={currentPage >= Math.ceil(totalPosts / postsPerPage)}
-                onClick={() => setCurrentPage(prev => prev + 1)}
-                className="rounded-2xl px-6 h-12 font-bold uppercase tracking-widest bg-white border-2 hover:bg-slate-50 disabled:opacity-30 transition-all"
-              >
-                Selanjutnya
-              </Button>
             </div>
-          )}
-        </section>
-      </div>
-    </main>
 
-    <Footer />
-  </div>
-);
+            <motion.div
+              variants={containerVariants}
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              <AnimatePresence mode="popLayout">
+                {loading ? (
+                  // Skeleton loading for news
+                  Array.from({ length: 6 }).map((_, i) => (
+                    <motion.div key={`skeleton-${i}`} variants={itemVariants}>
+                      <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white h-full">
+                        <div className="p-8 pb-0">
+                          <Skeleton className="h-4 w-20 mb-4 rounded-xl" />
+                          <Skeleton className="h-8 w-full mb-4 rounded-xl" />
+                          <Skeleton className="h-4 w-1/2 rounded-xl" />
+                        </div>
+                        <CardContent className="p-8 pt-4 grow">
+                          <Skeleton className="h-4 w-full mb-2 rounded-xl" />
+                          <Skeleton className="h-4 w-full mb-2 rounded-xl" />
+                          <Skeleton className="h-4 w-2/3 rounded-xl" />
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))
+                ) : latestPosts.length > 0 ? (
+                  latestPosts.map((post) => (
+                    <motion.div
+                      layout
+                      key={post.id}
+                      variants={itemVariants}
+                    >
+                      <a href={`/posts/${post.slug}`} className="block h-full">
+                        <Card className="group border-none shadow-xl hover:shadow-2xl transition-all duration-500 rounded-[2.5rem] overflow-hidden bg-white flex flex-col h-full cursor-pointer">
+                          <CardHeader className="p-8 pb-0">
+                            <div className="flex justify-between items-start mb-4">
+                              <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl ${post.category === 'pengumuman' ? 'bg-amber-100 text-amber-600' :
+                                post.category === 'agenda' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
+                                }`}>
+                                {post.category}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest flex items-center gap-2">
+                                <Calendar className="h-3 w-3" />
+                                {new Date(post.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+                              </span>
+                            </div>
+                            <CardTitle className="text-2xl font-black tracking-tight group-hover:text-primary transition-colors leading-tight line-clamp-2">
+                              {post.title}
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="p-8 pt-4 grow">
+                            <p className="text-slate-500 text-sm line-clamp-3 leading-relaxed font-medium">
+                              {post.content?.replace(/<[^>]*>/g, '').slice(0, 150)}...
+                            </p>
+                            <div className="mt-6 flex items-center justify-between">
+                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                                {post.organizations?.name}
+                              </span>
+                              <div className="p-2 bg-slate-50 rounded-xl group-hover:bg-primary group-hover:text-white transition-all transform group-hover:translate-x-1">
+                                <ArrowRight className="h-4 w-4" />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </a>
+                    </motion.div>
+                  ))
+                ) : (
+                  <div className="col-span-full py-20 text-center">
+                    <div className="bg-slate-50 w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                      <BookOpen className="h-8 w-8 text-slate-300" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">Belum ada berita</h3>
+                    <p className="text-slate-500">Kembali lagi nanti untuk informasi terbaru.</p>
+                  </div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+
+            {/* Pagination Controls */}
+            {!loading && totalPosts > postsPerPage && (
+              <div className="mt-16 flex justify-center items-center gap-4">
+                <Button
+                  variant="outline"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  className="rounded-2xl px-6 h-12 font-bold uppercase tracking-widest bg-white border-2 hover:bg-slate-50 disabled:opacity-30 transition-all"
+                >
+                  Sebelumnya
+                </Button>
+
+                <div className="flex items-center gap-2">
+                  {Array.from({ length: Math.ceil(totalPosts / postsPerPage) }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setCurrentPage(i + 1)}
+                      className={`w-10 h-10 rounded-xl font-black transition-all ${currentPage === i + 1
+                        ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-110'
+                        : 'bg-white border-2 text-slate-400 hover:border-primary/50 hover:text-primary'
+                        }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+
+                <Button
+                  variant="outline"
+                  disabled={currentPage >= Math.ceil(totalPosts / postsPerPage)}
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  className="rounded-2xl px-6 h-12 font-bold uppercase tracking-widest bg-white border-2 hover:bg-slate-50 disabled:opacity-30 transition-all"
+                >
+                  Selanjutnya
+                </Button>
+              </div>
+            )}
+          </section>
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
 }
