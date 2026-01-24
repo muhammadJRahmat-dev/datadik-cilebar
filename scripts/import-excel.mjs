@@ -52,8 +52,8 @@ async function main() {
   }
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !serviceKey || url.includes('placeholder.supabase.co')) {
-    console.error('Supabase env missing or placeholder. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.')
+  if (!url || !serviceKey) {
+    console.error('Supabase env missing. Set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.')
     process.exit(1)
   }
   const wb = xlsx.readFile(filePath)

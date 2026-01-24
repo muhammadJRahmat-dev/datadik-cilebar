@@ -209,7 +209,7 @@ export default function SchoolPage() {
               </h1>
               <div className="flex flex-wrap justify-center md:justify-start gap-6 text-slate-400 font-medium">
                 <span className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4 text-(--primary)" /> {schoolAddress}
+                  <MapPin className="h-4 w-4" style={{ color: themeColor }} /> {schoolAddress}
                 </span>
                 {isSchool && (
                   <span className="flex items-center gap-2">

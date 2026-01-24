@@ -42,7 +42,7 @@ export default function HomePage() {
     async function fetchData() {
       const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
       const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-      const hasSupabase = !!url && !!key && !url.includes('placeholder.supabase.co');
+      const hasSupabase = !!url && !!key;
 
       if (!hasSupabase) {
         setLoading(false);

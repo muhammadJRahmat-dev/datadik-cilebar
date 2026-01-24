@@ -21,7 +21,7 @@ export default async function proxy(request: NextRequest) {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  const hasSupabase = !!supabaseUrl && !!supabaseKey && !supabaseUrl.includes('placeholder.supabase.co');
+  const hasSupabase = !!supabaseUrl && !!supabaseKey;
   let session: any = null;
   if (hasSupabase) {
     const supabase = createServerClient(

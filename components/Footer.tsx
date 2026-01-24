@@ -14,10 +14,10 @@ export default function Footer() {
     const host = window.location.host;
     const mainDomain = 'datadikcilebar.my.id';
     const isSubdomain = host !== mainDomain && host !== `www.${mainDomain}` && !host.includes('localhost:3000');
-    
+
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-    const hasSupabase = !!url && !!key && !url.includes('placeholder.supabase.co');
+    const hasSupabase = !!url && !!key;
     if ((isSubdomain || (host.includes('localhost') && host.split('.').length > 1)) && hasSupabase) {
       const slug = host.split('.')[0];
       if (slug && slug !== 'www' && slug !== 'localhost') {
@@ -53,7 +53,7 @@ export default function Footer() {
               </span>
             </div>
             <p className="text-sm leading-relaxed text-slate-400">
-              {org 
+              {org
                 ? `Portal informasi resmi ${org.name}. Menyajikan data pendidikan, berita, dan pengumuman terbaru secara transparan.`
                 : 'Portal manajemen data pendidikan terpadu untuk wilayah Kecamatan Cilebar, Karawang. Memudahkan akses informasi sekolah, siswa, dan guru dalam satu platform modern.'
               }

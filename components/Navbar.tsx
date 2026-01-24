@@ -72,7 +72,7 @@ export default function Navbar() {
 
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
     const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-    const hasSupabase = !!url && !!key && !url.includes('placeholder.supabase.co');
+    const hasSupabase = !!url && !!key;
     if (hasSupabase) {
       supabase
         .from('organizations')
