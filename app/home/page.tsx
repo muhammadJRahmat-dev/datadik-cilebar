@@ -60,12 +60,7 @@ export default function HomePage() {
             logo_url,
             school_data (
               npsn,
-              jml_siswa,
-              jml_guru,
-              lat,
-              lng,
-              stats,
-              dynamic_info
+              stats
             )
           `)
           .in('type', ['sekolah', 'mitra']);
@@ -77,11 +72,11 @@ export default function HomePage() {
             .filter(o => o.type === 'sekolah')
             .map(org => {
               const schoolData = org.school_data?.[0] || {};
-              const sStats = schoolData.stats || schoolData.dynamic_info || {};
-              const lat = sStats.lat ?? schoolData.lat;
-              const lng = sStats.lng ?? schoolData.lng;
-              const siswa = sStats.siswa ?? schoolData.jml_siswa ?? 0;
-              const guru = sStats.guru ?? schoolData.jml_guru ?? 0;
+              const sStats = schoolData.stats || {};
+              const lat = sStats.lat;
+              const lng = sStats.lng;
+              const siswa = sStats.siswa ?? 0;
+              const guru = sStats.guru ?? 0;
               const jenis = sStats.jenis || (org.name.includes('SD') ? 'SD' : org.name.includes('SMP') ? 'SMP' : org.name.includes('SMK') ? 'SMK' : 'Lainnya');
 
               return {
