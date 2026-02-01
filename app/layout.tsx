@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   keywords: ["Datadik", "Cilebar", "Dapodik", "Sekolah Cilebar", "Pendidikan Karawang"],
   authors: [{ name: "Datadik Cilebar Team" }],
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.svg",
   },
   robots: {
     index: true,

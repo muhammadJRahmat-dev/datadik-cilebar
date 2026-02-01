@@ -43,10 +43,6 @@ export default function SchoolPage() {
           theme_color,
           school_data (
             npsn,
-            jml_siswa,
-            jml_guru,
-            lat,
-            lng,
             stats,
             dynamic_info
           )
@@ -102,294 +98,241 @@ export default function SchoolPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-50 flex flex-col">
-        <Navbar />
-        <div className="pt-32 pb-20 bg-slate-900 relative overflow-hidden">
-          <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
-              <Skeleton className="w-40 h-40 rounded-3xl bg-slate-800" />
-              <div className="grow space-y-4">
-                <div className="flex gap-2 justify-center md:justify-start">
-                  <Skeleton className="h-6 w-24 rounded-full bg-slate-800" />
-                  <Skeleton className="h-6 w-24 rounded-full bg-slate-800" />
-                </div>
-                <Skeleton className="h-16 w-3/4 md:w-2/3 rounded-2xl bg-slate-800 mx-auto md:mx-0" />
-                <div className="flex flex-wrap justify-center md:justify-start gap-4">
-                  <Skeleton className="h-4 w-40 bg-slate-800" />
-                  <Skeleton className="h-4 w-32 bg-slate-800" />
-                  <Skeleton className="h-4 w-48 bg-slate-800" />
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <main className="container mx-auto px-4 py-12 grow max-w-7xl">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-            <div className="lg:col-span-2 space-y-12">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Skeleton className="h-48 rounded-3xl" />
-                <Skeleton className="h-48 rounded-3xl" />
-              </div>
-              <div className="space-y-4">
-                <Skeleton className="h-8 w-48 rounded-xl" />
-                <Skeleton className="h-[400px] rounded-3xl" />
-              </div>
-            </div>
-            <div className="space-y-8">
-              <Skeleton className="h-96 rounded-3xl" />
-            </div>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (!school) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <School className="h-16 w-16 text-muted-foreground mx-auto" />
-          <h1 className="text-2xl font-bold">Sekolah Tidak Ditemukan</h1>
-          <p className="text-muted-foreground">Maaf, data untuk sekolah "{site}" belum terdaftar.</p>
-          <Button asChild>
-            <a href="/">Kembali ke Beranda</a>
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  const data = school.school_data?.[0] || {};
-  const isSchool = school.type === 'sekolah';
-  const sStats = data.stats || data.dynamic_info || {};
-  const schoolAddress = school.address || sStats.address || 'Kecamatan Cilebar, Karawang, Jawa Barat';
-  const schoolEmail = sStats.kontak_email || 'info@cilebar.datadik.id';
-  const schoolWA = sStats.kontak_wa || '';
-  const themeColor = school.theme_color || '#2563eb';
-
-  const KNOWN_KEYS = ['siswa', 'guru', 'pegawai', 'rombel', 'jenis', 'status', 'visi', 'misi', 'kontak_wa', 'kontak_email', 'last_sync', 'lat', 'lng', 'address'];
-  const dynamicInfo = Object.entries(sStats)
-    .filter(([key]) => !KNOWN_KEYS.includes(key))
-    .map(([key, value]) => ({ label: key, value: String(value) }));
-
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col" style={{ '--primary': themeColor } as any}>
-      <Navbar />
+    <div className="min-h-screen bg-slate-950 flex flex-col font-sans selection:bg-blue-500/30 overflow-x-hidden">
+      {/* Dynamic Background */}
+      <div className="fixed inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-[0.03] pointer-events-none" />
+      <div className="fixed top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[-10%] left-[-10%] w-[60vw] h-[60vw] bg-blue-600/10 rounded-full blur-[100px] animate-pulse" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-indigo-600/10 rounded-full blur-[120px] animate-pulse delay-1000" />
+      </div>
 
-      <header className="bg-slate-900 text-white pt-32 pb-16 shadow-2xl relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10" />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
+      <div className="relative z-10 flex-1 flex flex-col">
+        <Navbar />
 
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="flex flex-col md:flex-row items-center md:items-end gap-8">
-            <div className="w-40 h-40 bg-white rounded-3xl flex items-center justify-center shadow-2xl border-4 border-white/20 overflow-hidden relative">
-              {school.logo_url ? (
-                <Image src={school.logo_url} alt={school.name} width={160} height={160} className="object-contain p-4" />
-              ) : (
-                <div className="p-8 bg-slate-50 rounded-full">
-                  {isSchool ? <School className="h-12 w-12 text-slate-400" /> : <Users className="h-12 w-12 text-slate-400" />}
+        <main className="grow pt-24 pb-24">
+          {loading ? (
+            <div className="container mx-auto px-4 space-y-8">
+              <Skeleton className="h-64 w-full rounded-[3rem] bg-white/5" />
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <Skeleton className="h-96 w-full rounded-[2.5rem] bg-white/5" />
+                <Skeleton className="h-96 w-full lg:col-span-2 rounded-[2.5rem] bg-white/5" />
+              </div>
+            </div>
+          ) : school ? (
+            <div className="container mx-auto px-4 space-y-8">
+              {/* Header Profile */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="relative overflow-hidden rounded-[3rem] bg-white/5 border border-white/10 backdrop-blur-xl shadow-2xl"
+              >
+                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-r from-blue-600 to-indigo-600 opacity-20" />
+                <div className="relative p-8 md:p-12 flex flex-col md:flex-row items-center md:items-end gap-8">
+                  <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] bg-white p-4 shadow-2xl shadow-black/20 shrink-0 flex items-center justify-center border-4 border-white/10">
+                    {school.logo_url ? (
+                      <div className="relative w-full h-full">
+                        <Image src={school.logo_url} alt={school.name} fill className="object-contain" />
+                      </div>
+                    ) : (
+                      <School className="h-16 w-16 text-slate-300" />
+                    )}
+                  </div>
+                  <div className="text-center md:text-left flex-1 space-y-2">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-blue-500/20 border border-blue-500/30 text-blue-300 text-[10px] font-black uppercase tracking-widest mb-2">
+                      <ShieldCheck className="h-3 w-3" />
+                      Terverifikasi
+                    </div>
+                    <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-none">
+                      {school.name}
+                    </h1>
+                    <p className="text-slate-400 font-medium max-w-2xl text-sm md:text-base leading-relaxed">
+                      {school.address || "Alamat belum tersedia"}
+                    </p>
+                    <div className="flex flex-wrap justify-center md:justify-start gap-3 mt-4">
+                      {school.school_data?.[0]?.npsn && (
+                        <span className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-bold font-mono">
+                          NPSN: {school.school_data[0].npsn}
+                        </span>
+                      )}
+                      <span className="px-4 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/20 text-emerald-300 text-xs font-bold uppercase tracking-wider">
+                        Status: Aktif
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              )}
-            </div>
-            <div className="text-center md:text-left grow">
-              <div className="flex flex-wrap justify-center md:justify-start gap-2 mb-4">
-                <span className="px-3 py-1 rounded-full bg-(--primary) text-white text-[10px] font-black uppercase tracking-widest">
-                  {school.type === 'mitra' ? 'ORGANISASI MITRA' : (school.type || sStats.jenis || 'SEKOLAH')}
-                </span>
-                <span className="px-3 py-1 rounded-full bg-green-500 text-white text-[10px] font-black uppercase tracking-[0.2em]">
-                  {sStats.status || 'AKTIF'}
-                </span>
+              </motion.div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                {/* Sidebar Info (Col 4) */}
+                <div className="lg:col-span-4 space-y-8">
+                  {/* Stats Grid */}
+                  <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="grid grid-cols-2 gap-4"
+                  >
+                    {[
+                      { label: 'Siswa', value: school.school_data?.[0]?.stats?.siswa || '-', icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+                      { label: 'Guru', value: school.school_data?.[0]?.stats?.guru || '-', icon: GraduationCap, color: 'text-indigo-400', bg: 'bg-indigo-500/10', border: 'border-indigo-500/20' },
+                    ].map((stat, i) => (
+                      <motion.div key={i} variants={itemVariants}>
+                        <Card className={`border ${stat.border} ${stat.bg} backdrop-blur-md shadow-lg rounded-[2rem]`}>
+                          <CardContent className="p-6 flex flex-col items-center text-center">
+                            <stat.icon className={`h-8 w-8 ${stat.color} mb-3`} />
+                            <div className="text-2xl font-black text-white tracking-tight">{stat.value}</div>
+                            <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">{stat.label}</div>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+
+                  {/* Dynamic Info */}
+                  <Card className="border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl rounded-[2.5rem] overflow-hidden">
+                    <CardContent className="p-8 space-y-6">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                          <BookOpen className="h-6 w-6 text-slate-400" />
+                        </div>
+                        <h3 className="text-xl font-black text-white">Informasi Sekolah</h3>
+                      </div>
+
+                      <div className="space-y-4">
+                        {school.school_data?.[0]?.dynamic_info ? (
+                          Object.entries(school.school_data[0].dynamic_info).map(([key, value]) => (
+                            <div key={key} className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5">
+                              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">{key}</span>
+                              <span className="text-sm font-black text-white text-right">{value as React.ReactNode}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-8">
+                            <p className="text-slate-500 text-sm italic">Belum ada informasi tambahan</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="pt-6 border-t border-white/10 space-y-3">
+                        <div className="flex items-center gap-3 text-slate-400 text-sm">
+                          <MapPin className="h-4 w-4 shrink-0" />
+                          <span className="line-clamp-2">{school.address}</span>
+                        </div>
+                        {school.school_data?.[0]?.stats?.kontak_email && (
+                          <div className="flex items-center gap-3 text-slate-400 text-sm">
+                            <Mail className="h-4 w-4 shrink-0" />
+                            <span>{school.school_data[0].stats.kontak_email}</span>
+                          </div>
+                        )}
+                        {school.school_data?.[0]?.stats?.kontak_wa && (
+                          <div className="flex items-center gap-3 text-slate-400 text-sm">
+                            <Phone className="h-4 w-4 shrink-0" />
+                            <span>{school.school_data[0].stats.kontak_wa}</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Map */}
+                  <div className="h-64 rounded-[2.5rem] overflow-hidden border border-white/10 shadow-2xl bg-slate-900 relative">
+                    <CilebarMap schools={[
+                      {
+                        id: school.id,
+                        name: school.name,
+                        lat: school.school_data?.[0]?.stats?.lat || -6.1956,
+                        lng: school.school_data?.[0]?.stats?.lng || 107.3600,
+                        slug: school.slug,
+                        npsn: school.school_data?.[0]?.npsn
+                      }
+                    ]} />
+                  </div>
+                </div>
+
+                {/* Main Content (Col 8) */}
+                <div className="lg:col-span-8 space-y-8">
+                  {/* Visi Misi */}
+                  {(school.school_data?.[0]?.stats?.visi || school.school_data?.[0]?.stats?.misi) && (
+                    <Card className="border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl rounded-[2.5rem] overflow-hidden">
+                      <CardContent className="p-10 space-y-8">
+                        {school.school_data?.[0]?.stats?.visi && (
+                          <div>
+                            <h3 className="text-lg font-black text-white uppercase tracking-widest mb-4 flex items-center gap-3">
+                              <Award className="h-5 w-5 text-yellow-500" /> Visi
+                            </h3>
+                            <p className="text-slate-300 text-lg font-medium leading-relaxed italic">
+                              "{school.school_data[0].stats.visi}"
+                            </p>
+                          </div>
+                        )}
+                        {school.school_data?.[0]?.stats?.misi && (
+                          <div>
+                            <h3 className="text-lg font-black text-white uppercase tracking-widest mb-4 flex items-center gap-3">
+                              <Globe className="h-5 w-5 text-blue-500" /> Misi
+                            </h3>
+                            <p className="text-slate-400 leading-relaxed whitespace-pre-line">
+                              {school.school_data[0].stats.misi}
+                            </p>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {/* Posts Grid */}
+                  <div>
+                    <h3 className="text-2xl font-black text-white mb-6 px-4">Berita & Kegiatan</h3>
+                    {posts.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {posts.map((post) => (
+                          <a key={post.id} href={`/posts/${post.slug}`} className="group block">
+                            <Card className="h-full border border-white/5 bg-white/5 hover:bg-white/10 hover:border-blue-500/30 transition-all duration-300 rounded-[2.5rem] overflow-hidden backdrop-blur-sm">
+                              <div className="p-8 flex flex-col h-full">
+                                <div className="flex justify-between items-start mb-4">
+                                  <span className={`text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-lg border ${post.category === 'pengumuman' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                    post.category === 'agenda' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
+                                    {post.category}
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                                    {new Date(post.created_at).toLocaleDateString('id-ID')}
+                                  </span>
+                                </div>
+                                <h4 className="text-xl font-black text-white mb-4 line-clamp-2 group-hover:text-blue-400 transition-colors">
+                                  {post.title}
+                                </h4>
+                                <p className="text-slate-400 text-sm line-clamp-3 mb-6 grow">
+                                  {post.content?.replace(/<[^>]*>/g, '').slice(0, 120)}...
+                                </p>
+                                <div className="flex items-center text-xs font-bold text-slate-500 group-hover:text-white transition-colors uppercase tracking-widest gap-2">
+                                  Baca Selengkapnya <div className="h-1 w-8 bg-blue-500 rounded-full" />
+                                </div>
+                              </div>
+                            </Card>
+                          </a>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="p-12 rounded-[3rem] bg-white/5 border border-dashed border-white/10 text-center">
+                        <p className="text-slate-500 font-medium">Belum ada berita yang dipublikasikan.</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-              <h1 className="text-4xl md:text-6xl font-black mb-4 tracking-tighter uppercase leading-none">
-                {school.name}
-              </h1>
-              <div className="flex flex-wrap justify-center md:justify-start gap-6 text-slate-400 font-medium">
-                <span className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" style={{ color: themeColor }} /> {schoolAddress}
-                </span>
-                {isSchool && (
-                  <span className="flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-(--primary)" /> NPSN: {data.npsn || '-'}
-                  </span>
-                )}
-              </div>
             </div>
-            <div className="hidden lg:block">
-              <Button size="lg" className="rounded-2xl font-bold px-8 py-8 h-auto shadow-xl shadow-primary/20 bg-(--primary) hover:opacity-90" asChild>
-                <a href={schoolWA ? `https://wa.me/${schoolWA.replace(/\D/g, '')}` : '#'} target="_blank">
-                  HUBUNGI KAMI
-                </a>
+          ) : (
+            <div className="container mx-auto px-4 py-20 text-center text-white">
+              <h1 className="text-4xl font-bold mb-4">Sekolah Tidak Ditemukan</h1>
+              <Button asChild>
+                <a href="/home">Kembali ke Beranda</a>
               </Button>
             </div>
-          </div>
-        </div>
-      </header>
+          )}
+        </main>
 
-      <main className="container mx-auto px-4 py-12 grow max-w-7xl">
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
-          className="grid grid-cols-1 lg:grid-cols-3 gap-12"
-        >
-          <div className="lg:col-span-2 space-y-12">
-            <motion.section variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="border-none shadow-xl bg-white rounded-3xl overflow-hidden">
-                <CardContent className="p-8">
-                  <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl w-fit mb-6">
-                    <Award className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-3">Visi</h3>
-                  <p className="text-slate-600 text-sm leading-relaxed italic">
-                    {sStats.visi ? `"${sStats.visi}"` : `Visi belum diatur oleh operator.`}
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="border-none shadow-xl bg-white rounded-3xl overflow-hidden">
-                <CardContent className="p-8">
-                  <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl w-fit mb-6">
-                    <BookOpen className="h-6 w-6" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-3">Misi</h3>
-                  <p className="text-slate-600 text-sm leading-relaxed">
-                    {sStats.misi || `Misi belum diatur oleh operator.`}
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.section>
-
-            {isSchool && (
-              <motion.section variants={itemVariants}>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold flex items-center gap-2">
-                    <MapPin className="h-6 w-6 text-(--primary)" /> Lokasi Sekolah
-                  </h2>
-                </div>
-                <Card className="border-none shadow-xl rounded-3xl overflow-hidden">
-                  <CardContent className="p-0">
-                    <CilebarMap schools={[{
-                      id: school.id,
-                      name: school.name,
-                      lat: (sStats.lat ?? data.lat) || -6.2146,
-                      lng: (sStats.lng ?? data.lng) || 107.3000,
-                      slug: school.slug,
-                      npsn: data.npsn
-                    }]} />
-                  </CardContent>
-                </Card>
-              </motion.section>
-            )}
-
-            <motion.section variants={itemVariants}>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold flex items-center gap-2">
-                  <BookOpen className="h-6 w-6 text-(--primary)" /> Berita & Pengumuman
-                </h2>
-              </div>
-              <div className="grid gap-4">
-                {posts.length > 0 ? posts.map((item) => (
-                  <Card key={item.id} className="group hover:shadow-xl transition-all border-none shadow-md overflow-hidden rounded-2xl bg-white">
-                    <a href={`/posts/${item.slug}`}>
-                      <CardContent className="p-6">
-                        <div className="flex justify-between items-start mb-3">
-                          <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${item.category === 'pengumuman' ? 'bg-amber-100 text-amber-600' :
-                            item.category === 'agenda' ? 'bg-green-100 text-green-600' : 'bg-blue-100 text-blue-600'
-                            }`}>
-                            {item.category}
-                          </span>
-                          <span className="text-xs text-slate-400 flex items-center gap-1 font-bold uppercase tracking-tighter">
-                            <Calendar className="h-3 w-3" />
-                            {new Date(item.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                          </span>
-                        </div>
-                        <h3 className="font-bold text-xl group-hover:text-(--primary) transition-colors line-clamp-2 text-slate-800 tracking-tight">{item.title}</h3>
-                      </CardContent>
-                    </a>
-                  </Card>
-                )) : (
-                  <div className="py-12 text-center bg-white rounded-3xl border-2 border-dashed border-slate-100">
-                    <BookOpen className="h-12 w-12 text-slate-200 mx-auto mb-4" />
-                    <h3 className="text-lg font-bold text-slate-900">Belum ada berita</h3>
-                  </div>
-                )}
-              </div>
-            </motion.section>
-          </div>
-
-          <div className="space-y-8">
-            {isSchool && (
-              <motion.div variants={itemVariants}>
-                <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
-                  <div className="bg-slate-900 p-6 text-white">
-                    <h3 className="text-xl font-black uppercase tracking-widest">Statistik Cepat</h3>
-                  </div>
-                  <CardContent className="p-6 space-y-4">
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 bg-blue-100 text-blue-600 rounded-xl">
-                          <Users className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Siswa</p>
-                          <p className="text-2xl font-black text-slate-800 leading-none">{sStats.siswa?.toLocaleString('id-ID') || 0}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 bg-green-100 text-green-600 rounded-xl">
-                          <GraduationCap className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Guru</p>
-                          <p className="text-2xl font-black text-slate-800 leading-none">{sStats.guru?.toLocaleString('id-ID') || 0}</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 bg-orange-100 text-orange-600 rounded-xl">
-                          <BookOpen className="h-6 w-6" />
-                        </div>
-                        <div>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Rombel</p>
-                          <p className="text-2xl font-black text-slate-800 leading-none">{sStats.rombel || 0}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-
-            {dynamicInfo.length > 0 && (
-              <motion.div variants={itemVariants}>
-                <Card className="shadow-2xl border-none bg-white rounded-3xl overflow-hidden">
-                  <div className="bg-slate-50 p-6 border-b border-slate-100">
-                    <h3 className="text-lg font-black uppercase tracking-widest text-slate-800">Informasi Tambahan</h3>
-                  </div>
-                  <CardContent className="p-6 space-y-4">
-                    {dynamicInfo.map((info, idx) => (
-                      <div key={idx} className="flex justify-between items-center py-2 border-b border-slate-50 last:border-0">
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{info.label}</span>
-                        <span className="text-sm font-black text-slate-700">{info.value}</span>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            )}
-          </div>
-        </motion.div>
-      </main>
-
-      <Footer />
+        <Footer />
+      </div>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
+import {
   Image as ImageIcon,
   Loader2,
   Save,
@@ -19,7 +19,7 @@ import {
   AlertCircle,
   X
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminSettingsPage() {
   const router = useRouter();
@@ -39,10 +39,10 @@ export default function AdminSettingsPage() {
     email_verified_at: null,
     whatsapp_verified_at: null
   });
-  const [showVerifyModal, setShowVerifyModal] = useState<{type: 'email' | 'whatsapp', target: string} | null>(null);
+  const [showVerifyModal, setShowVerifyModal] = useState<{ type: 'email' | 'whatsapp', target: string } | null>(null);
   const [otpCode, setOtpCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
-  const [toast, setToast] = useState<{message: string, type: 'success' | 'error'} | null>(null);
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -229,9 +229,9 @@ export default function AdminSettingsPage() {
   };
 
   if (loading) return (
-    <div className="flex items-center justify-center min-h-100">
+    <div className="flex items-center justify-center min-h-screen">
       <div className="text-center space-y-4">
-        <Loader2 className="h-10 w-10 text-primary animate-spin mx-auto" />
+        <Loader2 className="h-10 w-10 text-blue-500 animate-spin mx-auto" />
         <p className="text-slate-500 font-bold uppercase tracking-widest text-xs">Memuat Pengaturan...</p>
       </div>
     </div>
@@ -241,13 +241,13 @@ export default function AdminSettingsPage() {
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Pengaturan Wilayah</h1>
-          <p className="text-slate-500 font-medium text-sm">Kelola identitas pusat dan branding Kecamatan</p>
+          <h1 className="text-3xl font-black text-white tracking-tight">Pengaturan Wilayah</h1>
+          <p className="text-slate-400 font-medium text-sm">Kelola identitas pusat dan branding Kecamatan</p>
         </div>
-        <Button 
-          onClick={handleSave} 
+        <Button
+          onClick={handleSave}
           disabled={isSaving}
-          className="rounded-2xl px-8 py-6 h-auto font-black uppercase tracking-widest gap-2 shadow-xl shadow-primary/20"
+          className="rounded-2xl px-8 py-6 h-auto font-black uppercase tracking-widest gap-2 shadow-xl shadow-blue-500/20 bg-blue-600 hover:bg-blue-500 text-white"
         >
           {isSaving ? <Loader2 className="h-5 w-5 animate-spin" /> : <Save className="h-5 w-5" />}
           Simpan Perubahan
@@ -257,78 +257,78 @@ export default function AdminSettingsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div className="md:col-span-2 space-y-8">
           {/* Basic Info */}
-          <Card className="border-none shadow-2xl shadow-slate-200/50 rounded-[2.5rem] bg-white overflow-hidden">
+          <Card className="border border-white/5 shadow-2xl shadow-black/20 rounded-[2.5rem] bg-white/5 overflow-hidden backdrop-blur-md">
             <CardHeader className="p-8 pb-4">
               <div className="flex items-center gap-3 mb-1">
-                <Building2 className="h-5 w-5 text-primary" />
-                <CardTitle className="text-xl font-black tracking-tight text-slate-900">Identitas Kecamatan</CardTitle>
+                <Building2 className="h-5 w-5 text-blue-500" />
+                <CardTitle className="text-xl font-black tracking-tight text-white">Identitas Kecamatan</CardTitle>
               </div>
-              <p className="text-slate-500 text-xs font-medium">Informasi resmi pusat administrasi</p>
+              <p className="text-slate-400 text-xs font-medium">Informasi resmi pusat administrasi</p>
             </CardHeader>
             <CardContent className="p-8 pt-0 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Nama Wilayah</label>
-                  <input 
+                  <input
                     type="text"
-                    className="w-full p-4 text-sm font-medium rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all"
+                    className="w-full p-4 text-sm font-medium rounded-2xl border border-white/10 bg-white/5 text-white focus:border-blue-500 focus:bg-white/10 focus:outline-none transition-all"
                     value={orgData.name}
-                    onChange={(e) => setOrgData({...orgData, name: e.target.value})}
+                    onChange={(e) => setOrgData({ ...orgData, name: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Tipe Instansi</label>
-                  <select 
-                    className="w-full p-4 text-sm font-medium rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all appearance-none"
+                  <select
+                    className="w-full p-4 text-sm font-medium rounded-2xl border border-white/10 bg-white/5 text-white focus:border-blue-500 focus:bg-white/10 focus:outline-none transition-all appearance-none"
                     value={orgData.type}
-                    onChange={(e) => setOrgData({...orgData, type: e.target.value})}
+                    onChange={(e) => setOrgData({ ...orgData, type: e.target.value })}
                   >
-                    <option value="dinas">Dinas / Kecamatan</option>
-                    <option value="umum">Umum</option>
+                    <option value="dinas" className="bg-slate-900">Dinas / Kecamatan</option>
+                    <option value="umum" className="bg-slate-900">Umum</option>
                   </select>
                 </div>
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Alamat Kantor Kecamatan</label>
-                <textarea 
-                  className="w-full min-h-24 p-4 text-sm font-medium rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all resize-none"
+                <textarea
+                  className="w-full min-h-24 p-4 text-sm font-medium rounded-2xl border border-white/10 bg-white/5 text-white focus:border-blue-500 focus:bg-white/10 focus:outline-none transition-all resize-none"
                   value={orgData.address}
-                  onChange={(e) => setOrgData({...orgData, address: e.target.value})}
+                  onChange={(e) => setOrgData({ ...orgData, address: e.target.value })}
                 />
               </div>
 
               {/* Email & WhatsApp Section */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-slate-50">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4 border-t border-white/5">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between ml-1">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Email Resmi</label>
                     {orgData.email_verified_at ? (
-                      <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-500 uppercase tracking-wider bg-emerald-50 px-2 py-1 rounded-lg">
+                      <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-400 uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg">
                         <CheckCircle2 className="h-3 w-3" /> Terverifikasi
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-wider bg-amber-50 px-2 py-1 rounded-lg">
+                      <span className="flex items-center gap-1 text-[9px] font-bold text-amber-400 uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
                         <AlertCircle className="h-3 w-3" /> Belum Verifikasi
                       </span>
                     )}
                   </div>
                   <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
-                    <input 
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                    <input
                       type="email"
                       placeholder="kecamatan@cilebar.go.id"
-                      className="w-full pl-12 pr-4 py-4 text-sm font-medium rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-4 text-sm font-medium rounded-2xl border border-white/10 bg-white/5 text-white focus:border-blue-500 focus:bg-white/10 focus:outline-none transition-all"
                       value={orgData.email}
-                      onChange={(e) => setOrgData({...orgData, email: e.target.value})}
+                      onChange={(e) => setOrgData({ ...orgData, email: e.target.value })}
                     />
                   </div>
                   {!orgData.email_verified_at && orgData.email && (
-                    <Button 
+                    <Button
                       onClick={() => handleSendOTP('email')}
                       disabled={isVerifying}
                       variant="outline"
-                      className="w-full rounded-xl border-slate-200 text-xs font-bold uppercase tracking-wider h-10"
+                      className="w-full rounded-xl border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-bold uppercase tracking-wider h-10"
                     >
                       Verifikasi Email
                     </Button>
@@ -339,31 +339,31 @@ export default function AdminSettingsPage() {
                   <div className="flex items-center justify-between ml-1">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">WhatsApp Center</label>
                     {orgData.whatsapp_verified_at ? (
-                      <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-500 uppercase tracking-wider bg-emerald-50 px-2 py-1 rounded-lg">
+                      <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-400 uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/20 px-2 py-1 rounded-lg">
                         <CheckCircle2 className="h-3 w-3" /> Terverifikasi
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-[9px] font-bold text-amber-500 uppercase tracking-wider bg-amber-50 px-2 py-1 rounded-lg">
+                      <span className="flex items-center gap-1 text-[9px] font-bold text-amber-400 uppercase tracking-wider bg-amber-500/10 border border-amber-500/20 px-2 py-1 rounded-lg">
                         <AlertCircle className="h-3 w-3" /> Belum Verifikasi
                       </span>
                     )}
                   </div>
                   <div className="relative group">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
-                    <input 
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
+                    <input
                       type="text"
                       placeholder="0812xxxxxxxx"
-                      className="w-full pl-12 pr-4 py-4 text-sm font-medium rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all"
+                      className="w-full pl-12 pr-4 py-4 text-sm font-medium rounded-2xl border border-white/10 bg-white/5 text-white focus:border-blue-500 focus:bg-white/10 focus:outline-none transition-all"
                       value={orgData.whatsapp}
-                      onChange={(e) => setOrgData({...orgData, whatsapp: e.target.value})}
+                      onChange={(e) => setOrgData({ ...orgData, whatsapp: e.target.value })}
                     />
                   </div>
                   {!orgData.whatsapp_verified_at && orgData.whatsapp && (
-                    <Button 
+                    <Button
                       onClick={() => handleSendOTP('whatsapp')}
                       disabled={isVerifying}
                       variant="outline"
-                      className="w-full rounded-xl border-slate-200 text-xs font-bold uppercase tracking-wider h-10"
+                      className="w-full rounded-xl border-white/10 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-bold uppercase tracking-wider h-10"
                     >
                       Verifikasi WhatsApp
                     </Button>
@@ -374,38 +374,38 @@ export default function AdminSettingsPage() {
           </Card>
 
           {/* Branding */}
-          <Card className="border-none shadow-2xl shadow-slate-200/50 rounded-[2.5rem] bg-white overflow-hidden">
+          <Card className="border border-white/5 shadow-2xl shadow-black/20 rounded-[2.5rem] bg-white/5 overflow-hidden backdrop-blur-md">
             <CardHeader className="p-8 pb-4">
               <div className="flex items-center gap-3 mb-1">
-                <Palette className="h-5 w-5 text-primary" />
-                <CardTitle className="text-xl font-black tracking-tight text-slate-900">Branding Wilayah</CardTitle>
+                <Palette className="h-5 w-5 text-blue-500" />
+                <CardTitle className="text-xl font-black tracking-tight text-white">Branding Wilayah</CardTitle>
               </div>
-              <p className="text-slate-500 text-xs font-medium">Kustomisasi logo dan identitas visual</p>
+              <p className="text-slate-400 text-xs font-medium">Kustomisasi logo dan identitas visual</p>
             </CardHeader>
             <CardContent className="p-8 pt-0 space-y-8">
               <div className="flex flex-col md:flex-row gap-8 items-start">
                 <div className="space-y-4">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1 text-center block">Logo & Favicon</label>
                   <div className="relative group">
-                    <div className="w-32 h-32 rounded-[2rem] border-4 border-slate-50 bg-slate-50 flex items-center justify-center overflow-hidden shadow-xl transition-transform group-hover:scale-105">
+                    <div className="w-32 h-32 rounded-[2rem] border-4 border-white/10 bg-white/5 flex items-center justify-center overflow-hidden shadow-xl transition-transform group-hover:scale-105">
                       {orgData.logo_url ? (
                         <img src={orgData.logo_url} alt="Logo" className="w-full h-full object-contain" />
                       ) : (
-                        <ImageIcon className="h-10 w-10 text-slate-200" />
+                        <ImageIcon className="h-10 w-10 text-slate-500" />
                       )}
                     </div>
-                    <input 
-                      type="file" 
-                      id="logo-upload" 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      id="logo-upload"
+                      className="hidden"
                       accept="image/*"
                       onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
                     />
-                    <Button 
-                      asChild 
-                      variant="secondary" 
-                      size="sm" 
-                      className="absolute -bottom-2 -right-2 rounded-xl shadow-lg border-2 border-white"
+                    <Button
+                      asChild
+                      variant="secondary"
+                      size="sm"
+                      className="absolute -bottom-2 -right-2 rounded-xl shadow-lg border-2 border-slate-900 bg-white hover:bg-slate-200 text-slate-900"
                     >
                       <label htmlFor="logo-upload" className="cursor-pointer">
                         {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageIcon className="h-4 w-4" />}
@@ -418,23 +418,23 @@ export default function AdminSettingsPage() {
                   <div className="space-y-2">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Warna Identitas Kecamatan</label>
                     <div className="flex gap-4">
-                      <input 
+                      <input
                         type="color"
-                        className="h-14 w-20 rounded-2xl border-2 border-slate-50 bg-white cursor-pointer"
+                        className="h-14 w-20 rounded-2xl border border-white/10 bg-white/5 cursor-pointer p-1"
                         value={orgData.theme_color}
-                        onChange={(e) => setOrgData({...orgData, theme_color: e.target.value})}
+                        onChange={(e) => setOrgData({ ...orgData, theme_color: e.target.value })}
                       />
-                      <input 
+                      <input
                         type="text"
-                        className="flex-1 p-4 text-sm font-mono rounded-2xl border-2 border-slate-50 bg-slate-50/50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all"
+                        className="flex-1 p-4 text-sm font-mono rounded-2xl border border-white/10 bg-white/5 text-white focus:border-blue-500 focus:bg-white/10 focus:outline-none transition-all"
                         value={orgData.theme_color}
-                        onChange={(e) => setOrgData({...orgData, theme_color: e.target.value})}
+                        onChange={(e) => setOrgData({ ...orgData, theme_color: e.target.value })}
                       />
                     </div>
                   </div>
-                  <div className="p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-1">Info Branding</p>
-                    <p className="text-xs text-slate-500 leading-relaxed">Warna ini akan digunakan sebagai identitas utama pada portal publik Kecamatan Cilebar.</p>
+                  <div className="p-4 bg-blue-500/10 rounded-2xl border border-blue-500/20">
+                    <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">Info Branding</p>
+                    <p className="text-xs text-slate-400 leading-relaxed">Warna ini akan digunakan sebagai identitas utama pada portal publik Kecamatan Cilebar.</p>
                   </div>
                 </div>
               </div>
@@ -444,17 +444,17 @@ export default function AdminSettingsPage() {
 
         {/* Preview Sidebar */}
         <div className="space-y-6">
-          <Card className="border-none shadow-xl shadow-slate-200/50 rounded-[2rem] bg-slate-900 text-white overflow-hidden p-8">
+          <Card className="border border-white/5 shadow-xl shadow-black/20 rounded-[2rem] bg-slate-900 text-white overflow-hidden p-8 sticky top-24">
             <h3 className="text-lg font-black tracking-tight mb-2">Live Preview</h3>
             <p className="text-slate-400 text-xs font-medium mb-6">Pratinjau tampilan di portal utama</p>
-            
+
             <div className="space-y-8">
-              <div className="bg-white/5 rounded-2xl p-6 flex flex-col items-center text-center gap-4">
+              <div className="bg-white/5 rounded-2xl p-6 flex flex-col items-center text-center gap-4 border border-white/5">
                 <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center overflow-hidden border border-white/10">
-                  {orgData.logo_url ? <img src={orgData.logo_url} className="w-full h-full object-contain" /> : <ShieldCheck className="h-8 w-8 text-primary" />}
+                  {orgData.logo_url ? <img src={orgData.logo_url} className="w-full h-full object-contain" /> : <ShieldCheck className="h-8 w-8 text-blue-500" />}
                 </div>
                 <div>
-                  <h4 className="font-black text-sm tracking-tight">{orgData.name || 'Nama Kecamatan'}</h4>
+                  <h4 className="font-black text-sm tracking-tight text-white">{orgData.name || 'Nama Kecamatan'}</h4>
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Portal Resmi</p>
                 </div>
               </div>
@@ -465,13 +465,13 @@ export default function AdminSettingsPage() {
                   <span className="text-[10px] font-mono text-slate-400">{orgData.theme_color}</span>
                 </div>
                 <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full transition-all duration-500" style={{ backgroundColor: orgData.theme_color, width: '100%' }} />
+                  <div className="h-full transition-all duration-500 shadow-[0_0_10px_rgba(37,99,235,0.5)]" style={{ backgroundColor: orgData.theme_color, width: '100%' }} />
                 </div>
               </div>
 
               <div className="pt-4 border-t border-white/5 space-y-3">
                 <div className="flex items-start gap-3">
-                  <MapPin className="h-4 w-4 text-primary shrink-0" />
+                  <MapPin className="h-4 w-4 text-blue-500 shrink-0" />
                   <p className="text-[10px] text-slate-400 leading-relaxed italic">{orgData.address || 'Alamat belum diatur'}</p>
                 </div>
               </div>
@@ -482,54 +482,54 @@ export default function AdminSettingsPage() {
 
       {/* Verification Modal */}
       {showVerifyModal && (
-        <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <motion.div 
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-white rounded-[2.5rem] shadow-2xl max-w-md w-full p-8 relative overflow-hidden"
+            className="bg-slate-900 rounded-[2.5rem] shadow-2xl max-w-md w-full p-8 relative overflow-hidden border border-white/10"
           >
-            <button 
+            <button
               onClick={() => setShowVerifyModal(null)}
-              className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-100 transition-colors"
+              className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/10 transition-colors"
             >
               <X className="h-5 w-5 text-slate-400" />
             </button>
 
             <div className="text-center space-y-4">
-              <div className="w-20 h-20 rounded-[2rem] bg-primary/10 flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 rounded-[2rem] bg-blue-500/10 flex items-center justify-center mx-auto mb-6 border border-blue-500/20">
                 {showVerifyModal.type === 'email' ? (
-                  <Mail className="h-10 w-10 text-primary" />
+                  <Mail className="h-10 w-10 text-blue-500" />
                 ) : (
-                  <Phone className="h-10 w-10 text-primary" />
+                  <Phone className="h-10 w-10 text-blue-500" />
                 )}
               </div>
-              
-              <h2 className="text-2xl font-black text-slate-900">Verifikasi {showVerifyModal.type === 'email' ? 'Email' : 'WhatsApp'}</h2>
-              <p className="text-slate-500 font-medium text-sm">
+
+              <h2 className="text-2xl font-black text-white">Verifikasi {showVerifyModal.type === 'email' ? 'Email' : 'WhatsApp'}</h2>
+              <p className="text-slate-400 font-medium text-sm">
                 Masukkan 6 digit kode OTP yang telah kami kirimkan ke <br />
-                <span className="text-slate-900 font-bold">{showVerifyModal.target}</span>
+                <span className="text-white font-bold">{showVerifyModal.target}</span>
               </p>
 
               <div className="pt-6 space-y-6">
-                <input 
+                <input
                   type="text"
                   maxLength={6}
                   placeholder="000000"
-                  className="w-full p-6 text-center text-4xl font-black tracking-[0.5em] rounded-3xl border-2 border-slate-100 bg-slate-50 focus:border-primary/20 focus:bg-white focus:outline-none transition-all"
+                  className="w-full p-6 text-center text-4xl font-black tracking-[0.5em] rounded-3xl border border-white/10 bg-white/5 text-white focus:border-blue-500 focus:bg-white/10 focus:outline-none transition-all placeholder:text-slate-700"
                   value={otpCode}
                   onChange={(e) => setOtpCode(e.target.value.replace(/[^0-9]/g, ''))}
                 />
 
-                <Button 
+                <Button
                   onClick={handleVerifyOTP}
                   disabled={isVerifying || otpCode.length !== 6}
-                  className="w-full rounded-2xl py-8 font-black uppercase tracking-widest gap-2 shadow-xl shadow-primary/20"
+                  className="w-full rounded-2xl py-8 font-black uppercase tracking-widest gap-2 shadow-xl shadow-blue-500/20 bg-blue-600 hover:bg-blue-500 text-white"
                 >
                   {isVerifying ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Verifikasi Sekarang'}
                 </Button>
 
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Tidak menerima kode? <button className="text-primary hover:underline" onClick={() => handleSendOTP(showVerifyModal.type)}>Kirim Ulang</button>
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  Tidak menerima kode? <button className="text-blue-400 hover:text-blue-300 hover:underline" onClick={() => handleSendOTP(showVerifyModal.type)}>Kirim Ulang</button>
                 </p>
               </div>
             </div>
@@ -538,16 +538,15 @@ export default function AdminSettingsPage() {
       )}
 
       {/* Toast Notification */}
-      <motion.div 
+      <motion.div
         initial={{ y: 100, opacity: 0 }}
         animate={toast ? { y: 0, opacity: 1 } : { y: 100, opacity: 0 }}
-        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50"
+        className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[200]"
       >
         {toast && (
-          <div className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-bold text-sm ${
-            toast.type === 'success' ? 'bg-slate-900 text-white' : 'bg-red-500 text-white'
-          }`}>
-            <div className={`w-2 h-2 rounded-full animate-pulse ${toast.type === 'success' ? 'bg-primary' : 'bg-white'}`} />
+          <div className={`px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-3 font-bold text-sm border ${toast.type === 'success' ? 'bg-slate-900 text-emerald-400 border-emerald-500/30' : 'bg-slate-900 text-red-400 border-red-500/30'
+            }`}>
+            <div className={`w-2 h-2 rounded-full animate-pulse ${toast.type === 'success' ? 'bg-emerald-500' : 'bg-red-500'}`} />
             {toast.message}
           </div>
         )}
